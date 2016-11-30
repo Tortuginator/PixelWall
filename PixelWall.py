@@ -1,5 +1,6 @@
 import time
 import math
+import PIL
 class RenderEngine():
 	def __init__(self,height,width,Hz):
 		self.brightness = 1;
@@ -12,7 +13,9 @@ class RenderEngine():
 		self.frameInSecond = 0
 		self.RenderInstances = []
 		self.framePreset = Frame(self.height,self.width)
-		self.frameTimes = []
+		self.frameTimes = [] #for Statistics
+		self.Animations = [] #All Animations are saved here
+		self.BitMapDB = {} #A temporary library of BMP maps
 
 	def setFramePreset(self,NewPreset):
 		if NewPreset.instanceOf(Frame):
@@ -53,7 +56,7 @@ class RenderEngine():
 
 	def getInputRenderer():
 		return self.Input;
-			
+
 	def setFPS(self,FPS):
 		self.fps = FPS;
 
@@ -65,7 +68,7 @@ class RenderEngine():
 			self.Halfframes  = value;
 
 	def setBrightness(self,brightness):
-		if not 0 <= brightness <= 1: 
+		if not 0 <= brightness <= 1:
 			return 0
 		self.brightness = brightness
 		return 1
@@ -177,6 +180,10 @@ class Frame():
 					"2":[(0,0),(1,0),(2,0),(0,1),(1,2),(2,3),(2,4),(1,5),(0,4)],
 					"3":[(0,0),(1,0),(2,1),(1,2),(2,4),(2,3),(1,5),(0,5)],
 					"4":[(2,0),(2,1),(2,2),(1,2),(0,2),(0,3),(0,4),(0,5),(2,3),(2,4)],
+					"5":[(0,1),(1,0),(2,1),(1,3),(0,3),(0,4),(0,5),(1,5),(2,5),(2,2)],
+					"6":[(0,1),(0,3),(1,0),(2,1),(1,2),(0,4),(1,5),(2,5),(0,2)],
+					"7":[(0,0),(0,1),(1,2),(1,3),(2,4),(0,5),(1,5),(2,5)],
+
 					"!":[(0,0),(0,2),(0,3),(0,4),(0,5)],
 					"a":[(0,0),(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(1,5),(0,5),(0,4),(0,3),(0,2),(0,1),(1,2)],
 					"b":[(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(1,0),(2,0),(1,2),(2,2),(2,1)],
@@ -193,3 +200,22 @@ class Frame():
 			else:
 				pos +=4;
 		return 1
+
+	def __importAnimationFile(self,file):
+		img_arr = []
+		img = PIL.Image.open(file)
+		rgb_im = img.convert('RGB')
+
+		for y in range(0,rgb_im.size[0]):
+			for x in range(0,rgb_im.size[1]):
+				b = im_rgb[x,y];
+				img_arr.append(b[0])
+				img_arr.append(b[1])
+				img_arr.append(b[2])
+		self.BitMapDB[file] = {"height":rgb_im.size[1],"width":rgb_im.size[0],"Content":g_arr};
+
+	def addAnimationFile(self,file,fps,X,Y,totalframes,height,width):
+		NewA = {"Type":"File","FPS":fps,"Image":{"File":file},"Frames":{"Width":width,"Height":height,"CurrentFrame":0,"totalframes":totalframes},"Start":self.totalframes-1,"Static":True};
+		if not NewA["Image"]["File"] in self.BitMapDB or NewA["Static"] == False:
+			self.__importAnimationFile(file)
+		if not (self.BitMapDB[file]["height"]%NewA["Frame"]["Height"]) == 0:
