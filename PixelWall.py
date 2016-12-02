@@ -28,8 +28,7 @@ class RenderEngine():
 
 	def pushFrame(self):
 		start_time = time.time()
-		newFrame = self.input(self.framePreset,self.fps,self.frameCount,self.frameInSecond)#call new frame
-
+		newFrame = self.input(Frame(self.height,self.width),self.fps,self.frameCount,self.frameInSecond)#call new frame
 		if self.brightness != 1:
 			newFrame = self.__adjustBrightness(newFrame)
 
@@ -78,6 +77,7 @@ class RenderEngine():
 		return self.brightness;
 
 	def __shouldDrawSubFrame(self,startframe,factor):
+		if startframe >= self.frameCount:return False;
 		diffFrameCount = self.frameCount-startframe
 		FramesSkipped = diffFrameCount%(1/factor)
 		if FramesSkipped == 0:
@@ -92,18 +92,18 @@ class RenderEngine():
 			pastFrames = (self.frameCount - i["Start"])//(1/i["Factor"]);
 			if i["Loop"] is False and i["Frame"]["totalframes"] < pastFrames:
 				self.Animations.pop(r);
-				return 0
+				return dFrame
+			print pastFrames%i["Frame"]["totalframes"]
 			if i["Type"] == "File":
 				for y in range(0,i["Frame"]["Height"]):
 					for x in range(0,self.BitMapDB[i["Image"]["File"]]["width"]):
-						localOffset = (pastFrames*i["Frame"]["Height"]*self.BitMapDB[i["Image"]["File"]]["width"])+(y*self.BitMapDB[i["Image"]["File"]]["width"])+x;
+						localOffset = ((pastFrames%i["Frame"]["totalframes"])*i["Frame"]["Height"]*self.BitMapDB[i["Image"]["File"]]["width"])+(y*self.BitMapDB[i["Image"]["File"]]["width"])+x;
 						content = self.BitMapDB[i["Image"]["File"]]["content"]
-
-						if content[0][localOffset] == 0 and content[1][localOffset] == 0 and content[2][localOffset] == 0 and i["Image"]["showBlack"] is False:
+						if i["Transparency"] is True and content[0][localOffset] == 0 and content[1][localOffset] == 0 and content[2][localOffset] == 0:
 							pass
 						else:
 							dFrame.setPixel(i["Position"]["X"]+x,i["Position"]["Y"]+y,(content[0][localOffset],content[1][localOffset],content[2][localOffset]))
-			r += 1;	
+		r += 1;	
 		return dFrame
 	def __importAnimationFile(self,file):
 		img_arrR = []
@@ -118,9 +118,14 @@ class RenderEngine():
 				img_arrB.append(b[2])
 		self.BitMapDB[file] = {"height":rgb_im.size[1],"width":rgb_im.size[0],"content":[img_arrR,img_arrG,img_arrB]};
 
-	def addAnimationFile(self,file,factor,X,Y,totalframes,height):
+	def addAnimationFile(self,file,factor,X,Y,ImageFrames,height,StartFrame = 0,Loop = False,Static = True,Transparency = True):
 		if not 0 < factor <= 1:return 0;
-		NewA = {"Type":"File","Factor":factor,"Position":{"X":X,"Y":Y},"Image":{"File":file,"showBlack":False},"Frame":{"Height":height,"totalframes":totalframes},"Start":0,"Loop":False,"Static":True};
+		if StartFrame == 0: StartFrame = self.frameCount;
+		if not Static in [True,False]:return 0
+		if not Loop in [True,False]:return 0
+		if not Transparency in [True,False]: return 0;
+
+		NewA = {"Type":"File","Factor":factor,"Position":{"X":X,"Y":Y},"Image":{"File":file},"Transparency":Transparency,"Frame":{"Height":height,"totalframes":ImageFrames},"Start":StartFrame,"Loop":Loop,"Static":Static};
 		if not NewA["Image"]["File"] in self.BitMapDB or NewA["Static"] == False:
 			self.__importAnimationFile(file)
 		if not (self.BitMapDB[file]["height"]%NewA["Frame"]["Height"]) == 0:
