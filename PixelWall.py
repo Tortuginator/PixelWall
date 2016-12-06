@@ -104,6 +104,28 @@ class Frame():
 			return False
 		return True
 
+	def setCircle(self,X,Y,radius,borderColor = (255,255,255),fill = False,fillColor = (0,0,0)):
+		if Frame.isColor(borderColor) is False:
+			return 0
+		if Frame.isColor(fillColor) is False:
+			return 0
+		if radius <= 0:
+			return 0
+		loc_pixels = []
+		if radius%1 != 0:
+			return 0
+
+		for i in range(0,radius+1):
+			eqn = math.floor(math.sqrt(radius - i^2))
+			loc_pixels.append([i,eqn])
+			loc_pixels.append([i,-eqn])
+			loc_pixels.append([-i,-eqn])
+			loc_pixels.append([-i,eqn])
+
+		for i in loc_pixels:
+			self.setPixel(x+i[0],y+i[1],borderColor)
+
+
 	def setRectangle(self,Xa,Xb,Ya,Yb,color):
 		if not self.isPixel(Xa,Ya):return 0;
 		if not self.isPixel(Xb,Yb):return 0;
