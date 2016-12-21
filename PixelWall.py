@@ -112,18 +112,20 @@ class Frame():
 		if radius <= 0:
 			return 0
 		loc_pixels = []
-		if radius%1 != 0:
+		if radius%2 != 0:
 			return 0
 
-		for i in range(0,radius+1):
-			eqn = math.floor(math.sqrt(radius - i^2))
+		for i in range(int(math.ceil(math.sqrt(radius)*-1)),int(math.floor(math.sqrt(radius)))):
+			print int(math.ceil(math.sqrt(radius)*-1))
+			eqn = math.sqrt(radius - i**2)
+			print eqn,i,round(eqn)
 			loc_pixels.append([i,eqn])
-			loc_pixels.append([i,-eqn])
-			loc_pixels.append([-i,-eqn])
-			loc_pixels.append([-i,eqn])
+			#loc_pixels.append([i,-eqn])
+			#loc_pixels.append([-i,-eqn])
+			#loc_pixels.append([-i,eqn])
 
 		for i in loc_pixels:
-			self.setPixel(x+i[0],y+i[1],borderColor)
+			self.setPixel(int(X+i[0]),int(Y+i[1]),borderColor)
 
 
 	def setRectangle(self,Xa,Xb,Ya,Yb,color):

@@ -2,7 +2,7 @@ import PixelWall as PW
 
 def myFrameGenerator(newframe,fps,frameCount,frameInSecond):
 	newframe.setPixel(0,20,[200,200,200],True)
-	newframe.setCircle(5,5,3);
+	newframe.setCircle(10,10,6);
 
 
 	#newframe.setRectangle(5,10,5,10,[150,150,150]);
