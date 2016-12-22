@@ -1,6 +1,14 @@
 import time
 import math
 from PIL import Image
+class FrameObjects():
+	def __init__(self):
+		pass
+	def clear(self):
+		pass
+	def Add(self,type,parameters={}):
+		pass
+
 class RenderEngine():
 	def __init__(self,height,width,Hz):
 		self.brightness = 1;
@@ -40,7 +48,7 @@ class RenderEngine():
 		if self.frameInSecond > self.fps:
 			self.frameInSecond = 1
 
-		print "--- %s seconds ---" % (time.time() - start_time)
+		print "[RENDERENGINE] fct %s" % (time.time() - start_time)
 
 
 	def __adjustBrightness(self,newFrame):
@@ -65,7 +73,7 @@ class RenderEngine():
 
 	def setHalfframes(self,value):
 		if value == True or value == False:
-			self.Halfframes  = value;
+			self.Halfframes = value;
 
 	def setBrightness(self,brightness):
 		if not 0 <= brightness <= 1:
@@ -103,8 +111,9 @@ class RenderEngine():
 							pass
 						else:
 							dFrame.setPixel(i["Position"]["X"]+x,i["Position"]["Y"]+y,(content[0][localOffset],content[1][localOffset],content[2][localOffset]))
-		r += 1;	
+		r += 1;
 		return dFrame
+
 	def __importAnimationFile(self,file):
 		img_arrR = []
 		img_arrG = []
@@ -132,6 +141,7 @@ class RenderEngine():
 			return 0
 		self.Animations.append(NewA);
 		return 1
+
 class Frame():
 	def __init__(self,height,width):
 		self.height = height;
@@ -160,29 +170,36 @@ class Frame():
 			return False
 		return True
 
-	def setCircle(self,X,Y,radius,borderColor = (255,255,255),fill = False,fillColor = (0,0,0)):
-		if Frame.isColor(borderColor) is False:
-			return 0
-		if Frame.isColor(fillColor) is False:
-			return 0
-		if radius <= 0:
-			return 0
-		loc_pixels = []
-		if radius%2 != 0:
-			return 0
+	def circle(self, x0, y0, loc, radius, colour):
+		if Frame.isColor(colour) is False:return 0;
+		#if Frame.isColor(fillColor) is False:return 0;
+		if radius <= 0:	return 0;
 
-		for i in range(int(math.ceil(math.sqrt(radius)*-1)),int(math.floor(math.sqrt(radius)))):
-			print int(math.ceil(math.sqrt(radius)*-1))
-			eqn = math.sqrt(radius - i**2)
-			print eqn,i,round(eqn)
-			loc_pixels.append([i,eqn])
-			#loc_pixels.append([i,-eqn])
-			#loc_pixels.append([-i,-eqn])
-			#loc_pixels.append([-i,eqn])
-
-		for i in loc_pixels:
-			self.setPixel(int(X+i[0]),int(Y+i[1]),borderColor)
-
+		f = 1 - radius
+		ddf_x = 1
+		ddf_y = -2 * radius
+		x = 0
+		y = radius
+		self.setPixel(x0+loc[0], y0 + radius+loc[1], colour)
+		self.setPixel(x0+loc[0], y0 - radius+loc[1], colour)
+		self.setPixel(x0 + radius+loc[0], y0+loc[1], colour)
+		self.setPixel(x0 - radius+loc[0], y0+loc[1], colour)
+		while x < y:
+			if f >= 0:
+				y -= 1
+				ddf_y += 2
+				f += ddf_y
+			x += 1
+			ddf_x += 2
+			f += ddf_x
+			self.setPixel(x0 + x+loc[0], y0 + y+loc[1], colour)
+			self.setPixel(x0 - x+loc[0], y0 + y+loc[1], colour)
+			self.setPixel(x0 + x+loc[0], y0 - y+loc[1], colour)
+			self.setPixel(x0 - x+loc[0], y0 - y+loc[1], colour)
+			self.setPixel(x0 + y+loc[0], y0 + x+loc[1], colour)
+			self.setPixel(x0 - y+loc[0], y0 + x+loc[1], colour)
+			self.setPixel(x0 + y+loc[0], y0 - x+loc[1], colour)
+			self.setPixel(x0 - y+loc[0], y0 - x+loc[1], colour)
 
 	def setRectangle(self,Xa,Xb,Ya,Yb,color):
 		if not self.isPixel(Xa,Ya):return 0;
@@ -252,6 +269,7 @@ class Frame():
 		return True
 
 	def writeText(self,X,Y,text,color):
+		text = text.toLower();#Geht das?
 		if not Frame.isColor(color):return 0;
 		if not self.isPixel(X,Y):return 0;
 		spaces = {"!":1}
@@ -280,4 +298,3 @@ class Frame():
 			else:
 				pos +=4;
 		return 1
-
