@@ -97,12 +97,13 @@ class RenderEngine():
 		for i in self.Animations:
 			if not self.__shouldDrawSubFrame(i["Start"],i["Factor"]):
 				continue
-			pastFrames = (self.frameCount - i["Start"])//(1/i["Factor"]);
-			if i["Loop"] is False and i["Frame"]["totalframes"] < pastFrames:
-				self.Animations.pop(r);
-				return dFrame
-			print pastFrames%i["Frame"]["totalframes"]
+			pastFrames = int((self.frameCount - i["Start"])//(1/i["Factor"]));
+
 			if i["Type"] == "File":
+				if i["Loop"] is False and i["Frame"]["totalframes"] < pastFrames:
+					self.Animations.pop(r);
+					return dFrame
+				#print pastFrames%i["Frame"]["totalframes"]
 				for y in range(0,i["Frame"]["Height"]):
 					for x in range(0,self.BitMapDB[i["Image"]["File"]]["width"]):
 						localOffset = ((pastFrames%i["Frame"]["totalframes"])*i["Frame"]["Height"]*self.BitMapDB[i["Image"]["File"]]["width"])+(y*self.BitMapDB[i["Image"]["File"]]["width"])+x;
@@ -111,6 +112,26 @@ class RenderEngine():
 							pass
 						else:
 							dFrame.setPixel(i["Position"]["X"]+x,i["Position"]["Y"]+y,(content[0][localOffset],content[1][localOffset],content[2][localOffset]))
+
+			if i["Type"] == "Circle":
+				Cindex = pastFrames%i["Radius"]
+				print Cindex
+				baseColor = [i["Color"][0] - i["ColorGRAD"][0],i["Color"][1] - i["ColorGRAD"][1],i["Color"][2] - i["ColorGRAD"][2]]
+
+				for p in range(0,Cindex+1+i["Length"]):
+					if p > Cindex-i["Length"]:
+						divRelation = float(p)/float(i["Length"])
+					else:
+						divRelation = 0
+					if p > Cindex:
+						divRad = Cindex
+					else:
+						divRad = p
+					divColor = (divRelation*baseColor[0] + i["ColorGRAD"][0],divRelation*baseColor[1] + i["ColorGRAD"][1],divRelation*baseColor[2] + i["ColorGRAD"][2])
+					dFrame.drawCircle(i["Position"]["X"],i["Position"]["Y"],divRad,divColor)
+
+				#def drawCircle(self, x0, y0, radius, colour):
+
 		r += 1;
 		return dFrame
 
@@ -142,6 +163,21 @@ class RenderEngine():
 		self.Animations.append(NewA);
 		return 1
 
+	def addAnnimationCircle(self,X,Y,radius,color,Loop = True,StartFrame = 0,colorGRAD = (0,0,0),factor = 1,length = 1):
+		if not radius >= 0:return 0;
+		if not factor > 0:return 0;
+		if not radius%1 == 0:return 0;#Even number
+		if not Loop in [True,False]: return 0;
+		if not Frame.isColor(color):return 0;
+		if not StartFrame >= 0:return 0;
+		if not StartFrame%1 == 0:return 0;#Even number
+		if not Frame.isColor(colorGRAD):return 0;
+
+		newA = {"Type":"Circle","Factor":factor,"Position":{"X":X,"Y":Y},"Radius":radius,"Color":color,"ColorGRAD":colorGRAD, "Start":StartFrame,"Loop":Loop,"Length":length}
+
+		self.Animations.append(newA);
+		return 1
+
 class Frame():
 	def __init__(self,height,width):
 		self.height = height;
@@ -170,20 +206,23 @@ class Frame():
 			return False
 		return True
 
-	def circle(self, x0, y0, loc, radius, colour):
+	def drawCircle(self, x0, y0, radius, colour):
 		if Frame.isColor(colour) is False:return 0;
+		colour = Frame.isColor(colour);
 		#if Frame.isColor(fillColor) is False:return 0;
 		if radius <= 0:	return 0;
+
+		#Adjust the location
 
 		f = 1 - radius
 		ddf_x = 1
 		ddf_y = -2 * radius
 		x = 0
 		y = radius
-		self.setPixel(x0+loc[0], y0 + radius+loc[1], colour)
-		self.setPixel(x0+loc[0], y0 - radius+loc[1], colour)
-		self.setPixel(x0 + radius+loc[0], y0+loc[1], colour)
-		self.setPixel(x0 - radius+loc[0], y0+loc[1], colour)
+		self.setPixel(x0, y0 + radius, colour)
+		self.setPixel(x0, y0 - radius, colour)
+		self.setPixel(x0 + radius, y0, colour)
+		self.setPixel(x0 - radius, y0, colour)
 		while x < y:
 			if f >= 0:
 				y -= 1
@@ -192,14 +231,14 @@ class Frame():
 			x += 1
 			ddf_x += 2
 			f += ddf_x
-			self.setPixel(x0 + x+loc[0], y0 + y+loc[1], colour)
-			self.setPixel(x0 - x+loc[0], y0 + y+loc[1], colour)
-			self.setPixel(x0 + x+loc[0], y0 - y+loc[1], colour)
-			self.setPixel(x0 - x+loc[0], y0 - y+loc[1], colour)
-			self.setPixel(x0 + y+loc[0], y0 + x+loc[1], colour)
-			self.setPixel(x0 - y+loc[0], y0 + x+loc[1], colour)
-			self.setPixel(x0 + y+loc[0], y0 - x+loc[1], colour)
-			self.setPixel(x0 - y+loc[0], y0 - x+loc[1], colour)
+			self.setPixel(x0 + x, y0 + y, colour)
+			self.setPixel(x0 - x, y0 + y, colour)
+			self.setPixel(x0 + x, y0 - y, colour)
+			self.setPixel(x0 - x, y0 - y, colour)
+			self.setPixel(x0 + y, y0 + x, colour)
+			self.setPixel(x0 - y, y0 + x, colour)
+			self.setPixel(x0 + y, y0 - x, colour)
+			self.setPixel(x0 - y, y0 - x, colour)
 
 	def setRectangle(self,Xa,Xb,Ya,Yb,color):
 		if not self.isPixel(Xa,Ya):return 0;
@@ -242,6 +281,8 @@ class Frame():
 			if not Frame.isColor(color):
 				return 0
 
+		if not X >= 0 or not Y >= 0:
+			return 0
 
 		Ioffset = self.getOffset(X,Y);
 		self.R[Ioffset] = color[0]
@@ -260,13 +301,13 @@ class Frame():
 
 	@staticmethod
 	def isColor(color):
-		if not 0 <= color[0] <= 255:
+		if not 0 <= int(color[0]) <= 255:
 			return False
-		if not 0 <= color[1] <= 255:
+		if not 0 <= int(color[1]) <= 255:
 			return False
-		if not 0 <= color[2] <= 255:
+		if not 0 <= int(color[2]) <= 255:
 			return False
-		return True
+		return (int(color[0]),int(color[1]),int(color[2]))
 
 	def writeText(self,X,Y,text,color):
 		text = text.toLower();#Geht das?
