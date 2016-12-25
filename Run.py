@@ -1,5 +1,6 @@
 import PixelWall as PW
 import time
+import PresetAnimations as PA
 def myFrameGenerator(newframe,fps,frameCount,frameInSecond):
 	#newframe.circle(5,5,(1,2),5,(0,254,0));
 	#newframe.drawCircle(0,8,5,(0,254,0));
@@ -11,11 +12,9 @@ def myFrameGenerator(newframe,fps,frameCount,frameInSecond):
 
 a = PW.RenderEngine(21,33,30)
 a.setInputRenderer(myFrameGenerator)
-a.addAnnimationTest(factor = 0.1);
-#a.addAnimationPattern(colorRangeA = (0,0,0),colorRangeB= (255,255,255));
-#a.addAnnimationCircle(15,10,20,(0,100,0),Loop = True,StartFrame = 0,colorGRAD = (0,0,0),factor = 1,length = 4)
-
-print a.Animations
+#a.addAnimationCustom(Name="Test",StartFrame = 0,Length = 90,Factor = 0.01,Function = PA.Presets.Test)
+a.addAnimationCustom(Name = "Circle2a",StartFrame=0,Count = 0,Length = 10,Factor = 0.001,Function = PA.Presets.Circle2,Parameters = {"Color":(255,0,0),"ColorGRAD":(0,0,0),"Length":5,"X":10,"Y":10,"FadeOut":10})
+a.addAnimationCustom(Name = "Circle2b",StartFrame=0,Count = 0,Length = 10,Factor = 0.001,Function = PA.Presets.Circle2,Parameters = {"Color":(0,255,0),"ColorGRAD":(0,0,0),"Length":5,"X":20,"Y":10,"FadeOut":10})
 
 while True:
 	a.pushFrame()
