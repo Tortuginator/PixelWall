@@ -24,16 +24,16 @@ window.setInterval(function(){
 			var rem = i % w;
 			//console.log("X:" + rem + " Y:" + line + "0: " + i + " 1: " + totl+i+ " 2: " + 2*totl+i);
 		    ctx.fillStyle = "rgb(" + uInt8Array[i] + "," + uInt8Array[totl+i] + "," + uInt8Array[2*totl+i] + ")";
-			ctx.fillRect(rem*10,line*10,9,9); 
-			ctx.fillRect(rem*10,300+line*10,10,10); 
+			ctx.fillRect(rem*10,line*10,9,9);
+			ctx.fillRect(rem*10,300+line*10,10,10);
 		}
 
 	  }
 	};
 	xhr.send();
-}, 75);
+}, 1/30);
 
 
-</script> 
+</script>
 
 </html>

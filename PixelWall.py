@@ -104,7 +104,7 @@ class RenderEngine():
 			if i["Type"] == "File":
 				if i["Loop"] is False and i["Frame"]["totalframes"] < pastFrames:
 					self.Animations.pop(r);
-					return dFrame
+
 				#print pastFrames%i["Frame"]["totalframes"]
 				for y in range(0,i["Frame"]["Height"]):
 					for x in range(0,self.BitMapDB[i["Image"]["File"]]["width"]):
@@ -116,8 +116,9 @@ class RenderEngine():
 							dFrame.setPixel(i["Position"]["X"]+x,i["Position"]["Y"]+y,(content[0][localOffset],content[1][localOffset],content[2][localOffset]))
 
 			elif i["Type"] == "TestA":
-				totalduration = 80
+				totalduration = 90
 				CurrentIndex = (pastFrames%totalduration)+1
+				if pastFrames//totalduration > 1:self.Animations.pop(r)
 
 				if CurrentIndex <= 5:
 					for p in range(0,(self.height//2)+1):
@@ -143,6 +144,11 @@ class RenderEngine():
 				elif CurrentIndex <=80:
 					CurrentIndex =CurrentIndex-60
 					dFrame.drawRectangle(0,self.width,0,self.height,((255/20)*CurrentIndex,(255/20)*CurrentIndex,(255/20)*CurrentIndex))
+				elif CurrentIndex <=90:
+					dFrame.setPixel(0,0,(255,255,255))
+					dFrame.setPixel(0,self.height,(255,255,255))
+					dFrame.setPixel(self.width,self.height,(255,255,255))
+					dFrame.setPixel(self.width,0,(255,255,255))
 
 			elif i["Type"] == "Circle":
 				Cindex = pastFrames%(i["Radius"])
@@ -181,11 +187,10 @@ class RenderEngine():
 					c0g = (i["ColorA"][1] - i["ColorB"][1])*(-1)
 					c0b = (i["ColorA"][2] - i["ColorB"][2])*(-1)
 					p0 = math.cos(self.Storage["RND_PATT"][p]*float(Cindex*0.0001))
-					if p0 < 0:
-						p0 = p0*(-1)
+					if p0 < 0:p0 = p0*(-1)
 					c0 = (int(i["ColorA"][0] + c0r*p0),int(i["ColorA"][1] + c0g*p0),int(i["ColorA"][2] + c0b*p0))
 					dFrame.setPixel(x0,y0,c0)
-		r += 1;
+			r += 1;
 		return dFrame
 
 	def __importAnimationFile(self,file):
@@ -242,9 +247,28 @@ class RenderEngine():
 
 		self.Animations.append(newA);
 		return 1
-	def addAnnimationCustom(self,Loop=False,StartFrame = 1,duration = 1,function = None,factor = 1):
-		print "NOT IMPLEMENTED"
-		pass
+
+	def addAnimationCustom(self,Name = "Unknown",Count = 0,StartFrame = 1,Length = 1,Function = None,Factor = 1):
+		if Count == 0:Loop = True;else:Loop = False;
+		if not Count >= 0:return 0
+		if not int(Count) == Count:return 0
+		if not Startframe >= 0:return 0
+		if not int(StartFrame) == StartFrame:return 0
+		if not Length >= 1:return 0
+		if not int(Length) == Length:return 0
+		if Function == None:return 0
+		if not Factor > 0:return 0
+		if Name == "Unknown":return 0
+
+		newA = {"Name":Name,"Count":Count,"StartFrame": StartFrame,"Lenght":Length,"Function":Function,"Factor":Factor}
+		if not Name in self.Animations:
+			self.Animations[Name] = newA;
+		else:
+			print "[ERROR] Name allready exists in self.Animations"
+			return 0
+		return 1
+
+
 
 	def addAnimationPattern(self,Loop=True,StartFrame = 1,factor = 1,colorRangeA=(0,0,0),colorRangeB=(255,255,255),RGBCorrelated = False):
 		if not Loop in [True,False]:return 0
