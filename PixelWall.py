@@ -114,15 +114,20 @@ class RenderEngine():
 							dFrame.setPixel(i["Position"]["X"]+x,i["Position"]["Y"]+y,(content[0][localOffset],content[1][localOffset],content[2][localOffset]))
 
 			if i["Type"] == "Circle":
-				Cindex = pastFrames%i["Radius"]
-				print Cindex
+				Cindex = pastFrames%(i["Radius"])
+				Cindex = Cindex+1
 				baseColor = [i["Color"][0] - i["ColorGRAD"][0],i["Color"][1] - i["ColorGRAD"][1],i["Color"][2] - i["ColorGRAD"][2]]
 
-				for p in range(0,Cindex+1+i["Length"]):
-					if p > Cindex-i["Length"]:
-						divRelation = float(p)/float(i["Length"])
+				for p in range(0,Cindex+1):
+					CurrentRadius = p
+					MaxRadius = Cindex
+					FadeIn = i["Length"]
+
+					if MaxRadius-FadeIn <= CurrentRadius:
+						divRelation = float(CurrentRadius-MaxRadius+FadeIn)/float(FadeIn)
 					else:
 						divRelation = 0
+					print divRelation
 					if p > Cindex:
 						divRad = Cindex
 					else:
