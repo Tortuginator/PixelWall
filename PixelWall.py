@@ -3,6 +3,11 @@ import math
 import random
 from PIL import Image
 
+class AnimationStates():
+	inProgress = 0
+	hasEnded = 1
+	nextIteration = 2
+
 class RenderEngine():
 	def __init__(self,height,width,Hz):
 		self.brightness = 1;
@@ -79,7 +84,6 @@ class RenderEngine():
 		return self.brightness;
 
 	def drawAnimation(self,dFrame):
-		r = 0
 		for i in self.Animations:
 			i = self.Animations[i]
 			if i["Type"] == "Custom":
@@ -88,15 +92,47 @@ class RenderEngine():
 					CurrentFrame = self.frameCount-i["StartFrame"]
 				else:
 					continue #SKIP
-				CurrentFrame = int(CurrentFrame*i["Factor"])
-				Iteration = CurrentFrame//i["Length"]
-				CurrentFrame = (CurrentFrame%i["Length"])+1
+				if i["Length"] == 0:
+					if "Iteration" in i:
+						Iteration = i["Iteration"]
+						CurrentFrame = CurrentFrame -i["Coffset"]
+					else:
+						Iteration = -1
+				else:
+					CurrentFrame = int(CurrentFrame*i["Factor"])
+					Iteration = CurrentFrame//i["Length"]
+					CurrentFrame = (CurrentFrame%i["Length"])+1
+
 				if Iteration > i["Count"] and i["Loop"] == False:
 					self.Animations.pop(i["Name"]);
+					print "[RENDERENGINE] Animation closed " + i["Name"]
 					continue
-				dFrame,self.Animations[i["Name"]]["Storage"]= i["Function"](dFrame,CurrentFrame,Iteration,i["Storage"],i["Parameters"])
+				dFrame,dStatus,self.Animations[i["Name"]]["Storage"]= i["Function"](dFrame,CurrentFrame,Iteration,i["Storage"],i["Parameters"])
+				if dStatus == 1:
+					self.Animations.pop(i["Name"])
+					print "[RENDERENGINE] Animation closed " + i["Name"]
+				elif dStatus = 2:
+					if i["Length"] == 0:
+						if not "Iteration" in i:
+							self.Animations[i["Name"]]["Iteration"] = 1
+							self.Animations[i["Name"]]["Coffset"] = CurrentFrame
+						else:
+							self.Animations[i["Name"]]["Iteration"] += 1
+							self.Animations[i["Name"]]["Coffset"] = CurrentFrame
 
-			r += 1;
+			elif i["Type"] == "Image"
+				if i["Loop"] is False and i["Frame"]["totalframes"] < pastFrames:
+						continue
+					#print pastFrames%i["Frame"]["totalframes"]
+					for y in range(0,i["Frame"]["Height"]):
+						for x in range(0,self.BitMapDB[i["Image"]["File"]]["width"]):
+							localOffset = ((pastFrames%i["Frame"]["totalframes"])*i["Frame"]["Height"]*self.BitMapDB[i["Image"]["File"]]["width"])+(y*self.BitMapDB[i["Image"]["File"]]["width"])+x;
+							content = self.BitMapDB[i["Image"]["File"]]["content"]
+							if i["Transparency"] is True and content[0][localOffset] == 0 and content[1][localOffset] == 0 and content[2][localOffset] == 0:
+								pass
+							else:
+								dFrame.setPixel(i["Position"]["X"]+x,i["Position"]["Y"]+y,(content[0][localOffset],content[1][localOffset],content[2][localOffset]))
+
 		return dFrame
 
 	#def addAnnimationTest(self,factor = 1,Loop = True,StartFrame = 0):
@@ -106,8 +142,35 @@ class RenderEngine():
 	#def addAnnimationCircle(self,X,Y,radius,color,Loop = True,StartFrame = 0,colorGRAD = (0,0,0),factor = 1,length = 1):
 		#newA = {"Type":"Circle","Factor":factor,"Position":{"X":X,"Y":Y},"Radius":radius,"Color":color,"ColorGRAD":colorGRAD, "Start":StartFrame,"Loop":Loop,"Length":length}
 
+	def __importAnimationFile(self,file):
+		img_arrR = []
+		img_arrG = []
+		img_arrB = []
+		rgb_im = Image.open(file)
+		for y in range(0,rgb_im.size[1]):
+			for x in range(0,rgb_im.size[0]):
+				b = rgb_im.getpixel((x,y));
+				img_arrR.append(b[0])
+				img_arrG.append(b[1])
+				img_arrB.append(b[2])
+		self.BitMapDB[file] = {"height":rgb_im.size[1],"width":rgb_im.size[0],"content":[img_arrR,img_arrG,img_arrB]};
 
-	def addAnimationCustom(self,Name = "Unknown",Count = 0,Parameters = {},StartFrame = 1,Length = 1,Function = None,Factor = 1,Storage = None):
+	def addAnimationImage(self,file,factor,X,Y,ImageFrames,height,StartFrame = 0,Loop = False,Static = True,Transparency = True):
+		if not 0 < factor <= 1:return 0;
+		if StartFrame == 0: StartFrame = self.frameCount;
+		if not Static in [True,False]:return 0
+		if not Loop in [True,False]:return 0
+		if not Transparency in [True,False]: return 0;
+
+		NewA = {"Type":"File","Factor":factor,"Position":{"X":X,"Y":Y},"Image":{"File":file},"Transparency":Transparency,"Frame":{"Height":height,"totalframes":ImageFrames},"Start":StartFrame,"Loop":Loop,"Static":Static};
+		if not NewA["Image"]["File"] in self.BitMapDB or NewA["Static"] == False:
+			self.__importAnimationFile(file)
+		if not (self.BitMapDB[file]["height"]%NewA["Frame"]["Height"]) == 0:
+			return 0
+		self.Animations.append(NewA);
+		return 1
+
+	def addAnimationCustom(self,Name = "Unknown",Count = 0,Parameters = {},StartFrame = 1,Length = 0,Function = None,Factor = 1,Storage = None):
 		if Count == 0:
 			Loop = True;
 		else:
@@ -116,7 +179,7 @@ class RenderEngine():
 		if not int(Count) == Count:return 0
 		if not StartFrame >= 0:return 0
 		if not int(StartFrame) == StartFrame:return 0
-		if not Length >= 1:return 0
+		if not Length >= 0:return 0
 		if not int(Length) == Length:return 0
 		if Function == None:return 0
 		if not Factor > 0:return 0
