@@ -13,9 +13,9 @@ def myFrameGenerator(newframe,fps,frameCount,frameInSecond):
 a = PW.RenderEngine(21,33,30)
 a.setInputRenderer(myFrameGenerator)
 #a.addAnimationCustom(Name="Test",StartFrame = 0,Length = 90,Factor = 0.01,Function = PA.Presets.Test)
-a.addAnimationCustom(Name = "Circle2a",StartFrame=0,Count = 0,Length = 10,Factor = 0.001,Function = PA.Presets.Circle2,Parameters = {"Color":(255,0,0),"ColorGRAD":(0,0,0),"Length":5,"X":10,"Y":10,"FadeOut":10})
-a.addAnimationCustom(Name = "Circle2b",StartFrame=0,Count = 0,Length = 10,Factor = 0.001,Function = PA.Presets.Circle2,Parameters = {"Color":(0,255,0),"ColorGRAD":(0,0,0),"Length":5,"X":20,"Y":10,"FadeOut":10})
-
+#a.addAnimationCustom(Name = "Circle2a",StartFrame=0,Count = 0,Length = 10,Factor = 0.001,Function = PA.Presets.Circle2,Parameters = {"Color":(255,0,0),"ColorGRAD":(0,0,0),"Length":5,"X":10,"Y":10,"FadeOut":10})
+#a.addAnimationCustom(Name = "Circle2b",StartFrame=0,Count = 0,Length = 10,Factor = 0.001,Function = PA.Presets.Circle2,Parameters = {"Color":(0,255,0),"ColorGRAD":(0,0,0),"Length":5,"X":20,"Y":10,"FadeOut":10})
+a.addAnimationCustom(Name="Ract",StartFrame = 0,Count = 0,Length = 0,Factor = 0.01,Function = PA.Presets.Rectangle1,Parameters = {"Color":(255,0,0),"Xstart":3,"Ystart": 3,"Xtarget":20,"Ytarget":20,"Xsize":2,"Ysize":2,"Length":4,"FadeColorEnd":(0,0,0),"FadeColorStart":(0,0,200)})
 while True:
 	a.pushFrame()
 	time.sleep(1/30);

@@ -2,6 +2,11 @@ import PixelWall as PW
 import math,random
 class Presets():
     @staticmethod
+    def Sprite1(dFrame,CurrentIndex,Iteration,Storage,Parameters):
+        """
+        Draws a path of objects following the coordinates
+        
+        """
     def Rectangle1(dFrame,CurrentIndex,Iteration,Storage,Parameters):
         """
         Draws a moving Rectangle
@@ -17,9 +22,45 @@ class Presets():
         -FadeColorEnd: [COLOR] the Color at the end of the Fade
         -FadeColorStart: [COLOR] the Color at the beginning of the Fade
         """
+        Length = Parameters["Xstart"]-Parameters["Xtarget"]
+        if Length < 0:Length = Length *(-1);
+        tmp_length = Parameters["Xstart"]-Parameters["Xtarget"]
+        if tmp_length < 0:tmp_length = tmp_length * (-1);
+        if tmp_length > Length:Length = tmp_length;
+
+        CurrentIndexNext = float(CurrentIndex)-math.floor(float(CurrentIndex))
+        CurrentIndex = int(math.floor(CurrentIndex))
+        #Calculate Rectangle Position
+        if Storage == None:
+            Storage = []
+            for i in range(0,Length):
+                X = Parameters["Xstart"] + float(Parameters["Xtarget"] - Parameters["Xstart"])*float(float(i)/Length)
+                Y = Parameters["Ystart"] + float(Parameters["Ytarget"] - Parameters["Ystart"])*float(float(i)/Length)
+                Storage.append((int(X),int(Y)))
+
+        for i in range(Parameters["Length"]+1,0,-1):
+            if not i > Length and not i < 0:
+                print i
+                X,Y = Storage[int(CurrentIndex-i)]
+                dFrame.drawRectangle(X,X+Parameters["Xsize"]-1,Y,Y+Parameters["Ysize"]-1,dFrame.mixGradientColor(Parameters["FadeColorStart"],Parameters["FadeColorEnd"],Parameters["Length"],i),opacity = 1-float(float(i)/Parameters["Length"]))
+
+        if int(CurrentIndex+1) < Length and int(CurrentIndex+1)>=0 and CurrentIndexNext > 0:
+            X,Y = Storage[CurrentIndex+1]
+            dFrame.drawRectangle(X,X+Parameters["Xsize"]-1,Y,Y+Parameters["Ysize"]-1,Parameters["Color"],opacity = CurrentIndexNext)
+        X,Y = Storage[CurrentIndex]
+        dFrame.drawRectangle(X,X+Parameters["Xsize"]-1,Y,Y+Parameters["Ysize"]-1,Parameters["Color"])
+
+        if int(CurrentIndex) == Length-1:
+            status = PW.AnimationStates.nextIteration
+        else:
+            status = PW.AnimationStates.inProgress
+        return (dFrame,status,Storage)
+
+
 
     @staticmethod
     def Test(dFrame,CurrentIndex,Iteration,Storage,Parameters):
+        CurrentIndex = int(CurrentIndex)
         """
         Draws a Testpattern to check if all colors and pixels are displayed corretly and the correct screensize was detected
         -has no parameters
@@ -60,6 +101,7 @@ class Presets():
 
     @staticmethod
     def Circle1(dFrame,CurrentIndex,Iteration,Storage,Parameters):
+        CurrentIndex = int(CurrentIndex)
         """
         Draws A Circle
         -The circle has a inner fade
@@ -92,6 +134,7 @@ class Presets():
 
     @staticmethod
     def Circle2(dFrame,CurrentIndex,Iteration,Storage,Parameters):
+        CurrentIndex = int(CurrentIndex)
         """
 
         Draws A Circle
@@ -129,6 +172,7 @@ class Presets():
 
     @staticmethod
     def Pattern1(dFrame,Cindex,Iteration,Storage,Parameters):
+        CurrentIndex = int(CurrentIndex)
         """
         Draws a random pattern of pixels using the COS Function
         The pixels have no relation to each other

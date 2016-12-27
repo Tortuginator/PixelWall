@@ -98,40 +98,42 @@ class RenderEngine():
 						CurrentFrame = CurrentFrame -i["Coffset"]
 					else:
 						Iteration = -1
+					CurrentFrame = float(CurrentFrame)*i["Factor"]
+					print float(CurrentFrame)*i["Factor"]
 				else:
-					CurrentFrame = int(CurrentFrame*i["Factor"])
+					CurrentFrame = float(CurrentFrame)*i["Factor"]
 					Iteration = CurrentFrame//i["Length"]
-					CurrentFrame = (CurrentFrame%i["Length"])+1
-
-				if Iteration > i["Count"] and i["Loop"] == False:
+					CurrentFrame = float(CurrentFrame%i["Length"])+1
+				print CurrentFrame
+				if Iteration > i["Count"] and i["Count"] != 0:
 					self.Animations.pop(i["Name"]);
 					print "[RENDERENGINE] Animation closed " + i["Name"]
 					continue
 				dFrame,dStatus,self.Animations[i["Name"]]["Storage"]= i["Function"](dFrame,CurrentFrame,Iteration,i["Storage"],i["Parameters"])
-				if dStatus == 1:
+				if dStatus == AnimationStates.hasEnded:
 					self.Animations.pop(i["Name"])
 					print "[RENDERENGINE] Animation closed " + i["Name"]
-				elif dStatus = 2:
+					continue
+				elif dStatus == AnimationStates.nextIteration:
+					print "Iteration registered"
 					if i["Length"] == 0:
 						if not "Iteration" in i:
-							self.Animations[i["Name"]]["Iteration"] = 1
-							self.Animations[i["Name"]]["Coffset"] = CurrentFrame
-						else:
-							self.Animations[i["Name"]]["Iteration"] += 1
-							self.Animations[i["Name"]]["Coffset"] = CurrentFrame
+							self.Animations[i["Name"]]["Iteration"] = 0
+							self.Animations[i["Name"]]["Coffset"] = 0
+						self.Animations[i["Name"]]["Iteration"] += 1
+						self.Animations[i["Name"]]["Coffset"] += CurrentFrame*(1/i["Factor"])
 
-			elif i["Type"] == "Image"
+			elif i["Type"] == "Image":
 				if i["Loop"] is False and i["Frame"]["totalframes"] < pastFrames:
-						continue
-					#print pastFrames%i["Frame"]["totalframes"]
-					for y in range(0,i["Frame"]["Height"]):
-						for x in range(0,self.BitMapDB[i["Image"]["File"]]["width"]):
-							localOffset = ((pastFrames%i["Frame"]["totalframes"])*i["Frame"]["Height"]*self.BitMapDB[i["Image"]["File"]]["width"])+(y*self.BitMapDB[i["Image"]["File"]]["width"])+x;
-							content = self.BitMapDB[i["Image"]["File"]]["content"]
-							if i["Transparency"] is True and content[0][localOffset] == 0 and content[1][localOffset] == 0 and content[2][localOffset] == 0:
-								pass
-							else:
-								dFrame.setPixel(i["Position"]["X"]+x,i["Position"]["Y"]+y,(content[0][localOffset],content[1][localOffset],content[2][localOffset]))
+					continue
+				for y in range(0,i["Frame"]["Height"]):
+					for x in range(0,self.BitMapDB[i["Image"]["File"]]["width"]):
+						localOffset = ((pastFrames%i["Frame"]["totalframes"])*i["Frame"]["Height"]*self.BitMapDB[i["Image"]["File"]]["width"])+(y*self.BitMapDB[i["Image"]["File"]]["width"])+x;
+						content = self.BitMapDB[i["Image"]["File"]]["content"]
+						if i["Transparency"] is True and content[0][localOffset] == 0 and content[1][localOffset] == 0 and content[2][localOffset] == 0:
+							pass
+						else:
+							dFrame.setPixel(i["Position"]["X"]+x,i["Position"]["Y"]+y,(content[0][localOffset],content[1][localOffset],content[2][localOffset]))
 
 		return dFrame
 
@@ -260,9 +262,9 @@ class Frame():
 			self.setPixel(x0 + y, y0 - x, colour,merge = True)
 			self.setPixel(x0 - y, y0 - x, colour,merge = True)
 
-	def drawRectangle(self,Xa,Xb,Ya,Yb,color):
-		if not self.isPixel(Xa,Ya):return 0;
-		if not self.isPixel(Xb,Yb):return 0;
+	def drawRectangle(self,Xa,Xb,Ya,Yb,color,opacity = 1):
+		#if not self.isPixel(Xa,Ya):return 0;
+		#if not self.isPixel(Xb,Yb):return 0;
 
 		if not Frame.isColor(color):return 0;
 
@@ -283,11 +285,12 @@ class Frame():
 			Xoffset -= 1;
 
 		for p in range(0,Yoffset):
+			if not self.isPixel(Xa,Ya+p):continue;
 			Ioffset = self.getOffset(Xa,Ya+p)
 			for i in range(0,Xoffset):
-				self.R[Ioffset+i] = color[0]
-				self.G[Ioffset+i] = color[1]
-				self.B[Ioffset+i] = color[2]
+				self.R[Ioffset+i] = int(color[0]*opacity)
+				self.G[Ioffset+i] = int(color[1]*opacity)
+				self.B[Ioffset+i] = int(color[2]*opacity)
 
 		return 1
 
@@ -323,6 +326,17 @@ class Frame():
 
 		with open("frame.bin", "wb") as f:
 			f.write(byR + byG + byB)
+
+	@staticmethod
+	def mixGradientColor(colorA,colorB,steps,step):
+		if not Frame.isColor(colorA):return 0
+		if not Frame.isColor(colorB):return 0
+
+		colorC = []
+		colorC.append(colorA[0] + (colorA[0]-colorB[0])*(step/steps))
+		colorC.append(colorA[1] + (colorA[1]-colorB[1])*(step/steps))
+		colorC.append(colorA[2] + (colorA[2]-colorB[2])*(step/steps))
+		return (int(colorC[0]),int(colorC[1]),int(colorC[2]))
 
 	@staticmethod
 	def isColor(color):
