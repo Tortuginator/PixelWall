@@ -1,6 +1,9 @@
 import time
 import math
 import random
+import sys,socket
+import binascii
+import struct
 from PIL import Image
 
 class AnimationStates():
@@ -9,46 +12,65 @@ class AnimationStates():
 	nextIteration = 2
 
 class RenderEngine():
-	def __init__(self,height,width,Hz):
-		self.brightness = 1;
+	def __init__(self,height,width,fps):
+
+		#Checks
+		height = int(height);
+		width = int(width);
+		fps = int(fps);
+
+		#Limit Checks
+		if height < 0:return
+		if width < 0:return
+		if fps < 0:return
+
+
+		self.brightness = float(1);
 		self.height = height;
-		self.fps = 20;
+		self.fps = fps;
 		self.width = width;
-		self.frequency = Hz;
-		self.input = "";
+		self.FrameRenderFunction = ();
+		self.CallbackOnRenderedFrame = ();
 		self.frameCount = 0
 		self.frameInSecond = 0
-		self.RenderInstances = []
-		self.framePreset = Frame(self.height,self.width)
-		self.frameTimes = [] #for Statistics
 		self.Animations = {} #All Animations are saved here
 		self.BitMapDB = {} #A temporary library of BMP maps
+		self.temporaryStorage = {}
+	def pushFrame(self,type = "",compression = False,config = {}):
 
-	def setFramePreset(self,NewPreset):
-		if NewPreset.instanceOf(Frame):
-			self.framePreset = NewPreset
-			return 1
-		return 0
+		newFrame = self.FrameRenderFunction(Frame(self.height,self.width),self.fps,self.frameCount,self.frameInSecond)#call new frame
+		newFrame = self.drawAnimation(newFrame);
 
-	def getFramePreset(self):
-		return self.framePreset
-
-	def pushFrame(self):
-		start_time = time.time()
-		newFrame = self.input(Frame(self.height,self.width),self.fps,self.frameCount,self.frameInSecond)#call new frame
 		if self.brightness != 1:
 			newFrame = self.__adjustBrightness(newFrame)
 
-		newFrame = self.drawAnimation(newFrame);
+		FrameSource = newFrame.output(compression);
+
+		if type not in ["File","Callback","Stream"]:return 0
+
+		if type == "File":
+			if not "Filename" in config:return 0
+
+		elif type == "Callback":
+			if not "FunctionName" in config:return 0
+
+		elif type == "Stream":
+			if not "IP" in config:return 0
+			if not "Port" in config:return 0
+			if not "Streaming" in temporaryStorage:
+				temporaryStorage["Streaming"] = {"obj":None,"status":None}
+
+			if temporaryStorage["Streaming"]["obj"] == None:
+				temporaryStorage["Streaming"]["obj"] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				temporaryStorage["Streaming"]["obj"].connect((config["IP"], config["Port"]))
+
+
+			temporaryStorage["Streaming"]["obj"].send(FrameSource)
 		newFrame.output()
-		self.frameTimes.append(time.time() - start_time)
 		self.frameCount +=1
 		self.frameInSecond +=1
 		if self.frameInSecond > self.fps:
 			self.frameInSecond = 1
-
-		print "[RENDERENGINE] fct %s" % (time.time() - start_time)
-
 
 	def __adjustBrightness(self,newFrame):
 		for i in range(0,newFrame.PixelCount-1):
@@ -57,22 +79,17 @@ class RenderEngine():
 			newFrame.B[i] = int(newFrame.B[i]*self.brightness)
 		return newFrame
 
-	def setInputRenderer(self,InputName):
-		self.input = InputName
+	def setRendererFunction(self,FunctionName):
+		self.FrameRenderFunction = FunctionName
 		return 1
 
-	def getInputRenderer():
-		return self.Input;
+	def getRendererFunctionName():
+		return self.FrameRenderFunction;
 
 	def setFPS(self,FPS):
+		FPS = int(FPS);
+		if not FPS != 0:return 0;
 		self.fps = FPS;
-
-	def getHalfframes(self):
-		return self.Halfframes;
-
-	def setHalfframes(self,value):
-		if value == True or value == False:
-			self.Halfframes = value;
 
 	def setBrightness(self,brightness):
 		if not 0 <= brightness <= 1:
@@ -137,13 +154,6 @@ class RenderEngine():
 
 		return dFrame
 
-	#def addAnnimationTest(self,factor = 1,Loop = True,StartFrame = 0):
-		#newA = {"Type":"TestA","Factor":factor,"Start":StartFrame,"Loop":Loop}
-
-
-	#def addAnnimationCircle(self,X,Y,radius,color,Loop = True,StartFrame = 0,colorGRAD = (0,0,0),factor = 1,length = 1):
-		#newA = {"Type":"Circle","Factor":factor,"Position":{"X":X,"Y":Y},"Radius":radius,"Color":color,"ColorGRAD":colorGRAD, "Start":StartFrame,"Loop":Loop,"Length":length}
-
 	def __importAnimationFile(self,file):
 		img_arrR = []
 		img_arrG = []
@@ -204,7 +214,10 @@ class Frame():
 	def __init__(self,height,width):
 		self.height = height;
 		self.width = width;
-		self.PixelCount = height*width;
+		self.PixelCount = height*width
+		self.Version = "Alpha49"
+		self.ObjectStorage = [(0,self.Version)] ##0:Version,1:Pixel,2:Circle,3:Text,4:Rectangle
+		self.ObjectHash = []
 		self.R = [0 for i in range(0,self.PixelCount)]
 		self.G = [0 for i in range(0,self.PixelCount)]
 		self.B = [0 for i in range(0,self.PixelCount)]
@@ -241,10 +254,10 @@ class Frame():
 		ddf_y = -2 * radius
 		x = 0
 		y = radius
-		self.setPixel(x0, y0 + radius, colour,merge = True)
-		self.setPixel(x0, y0 - radius, colour,merge = True)
-		self.setPixel(x0 + radius, y0, colour,merge = True)
-		self.setPixel(x0 - radius, y0, colour,merge = True)
+		self.setPixel(x0, y0 + radius, colour,merge = True,ignore = True)
+		self.setPixel(x0, y0 - radius, colour,merge = True,ignore = True)
+		self.setPixel(x0 + radius, y0, colour,merge = True,ignore = True)
+		self.setPixel(x0 - radius, y0, colour,merge = True,ignore = True)
 		while x < y:
 			if f >= 0:
 				y -= 1
@@ -253,15 +266,18 @@ class Frame():
 			x += 1
 			ddf_x += 2
 			f += ddf_x
-			self.setPixel(x0 + x, y0 + y, colour,merge = True)
-			self.setPixel(x0 - x, y0 + y, colour,merge = True)
-			self.setPixel(x0 + x, y0 - y, colour,merge = True)
-			self.setPixel(x0 - x, y0 - y, colour,merge = True)
-			self.setPixel(x0 + y, y0 + x, colour,merge = True)
-			self.setPixel(x0 - y, y0 + x, colour,merge = True)
-			self.setPixel(x0 + y, y0 - x, colour,merge = True)
-			self.setPixel(x0 - y, y0 - x, colour,merge = True)
-
+			self.setPixel(x0 + x, y0 + y, colour,merge = True,ignore = True)
+			self.setPixel(x0 - x, y0 + y, colour,merge = True,ignore = True)
+			self.setPixel(x0 + x, y0 - y, colour,merge = True,ignore = True)
+			self.setPixel(x0 - x, y0 - y, colour,merge = True,ignore = True)
+			self.setPixel(x0 + y, y0 + x, colour,merge = True,ignore = True)
+			self.setPixel(x0 - y, y0 + x, colour,merge = True,ignore = True)
+			self.setPixel(x0 + y, y0 - x, colour,merge = True,ignore = True)
+			self.setPixel(x0 - y, y0 - x, colour,merge = True,ignore = True)
+		#Save to obj storage
+		if not str(1)+str(x0)+str(y0)+str(radius) in self.ObjectHash:
+			self.ObjectStorage.append((4,x0,y0,radius,color[0],color[1],color[2]))
+			self.ObjectHash.append(str(1)+str(x0)+str(y0)+str(radius))
 	def drawRectangle(self,Xa,Xb,Ya,Yb,color,opacity = 1):
 		#if not self.isPixel(Xa,Ya):return 0;
 		#if not self.isPixel(Xb,Yb):return 0;
@@ -292,12 +308,15 @@ class Frame():
 				self.G[Ioffset+i] = int(color[1]*opacity)
 				self.B[Ioffset+i] = int(color[2]*opacity)
 
+		if not str(3)+str(Xa)+str(Xb)+str(Ya)+str(Yb) in self.ObjectHash:
+			self.ObjectStorage.append((3,Xa,Xb,Ya,Yb,color[0],color[1],color[2]))
+			self.ObjectHash.append(str(3)+str(Xa)+str(Xb)+str(Ya)+str(Yb))
 		return 1
 
 	def __setPixel(self,X,Y,color):#WARNING, no checks will be performed
 		return self.setPixel(X,Y,color,True)
 
-	def setPixel(self,X,Y,color, performance = False,merge = False):
+	def setPixel(self,X,Y,color, performance = False,merge = False,ignore = False):
 		if not performance:
 			if not self.isPixel(X,Y):
 				return 0
@@ -317,9 +336,28 @@ class Frame():
 			self.G[Ioffset] = color[1]
 			self.B[Ioffset] = color[2]
 
+		if ignore == False:
+			if not str(0)+str(X)+str(Y) in self.ObjectHash:
+				self.ObjectStorage.append((1,X,Y,self.R[Ioffset],self.G[Ioffset],self.B[Ioffset]))
+				self.ObjectHash.append(str(0)+str(X)+str(Y))
 		return 1
 
-	def output(self):
+	def output(self,compression):
+		if compression == False:
+			byR = bytearray(self.R)
+			byG = bytearray(self.G)
+			byB = bytearray(self.B)
+
+			if byR[0] == 10 and byG[0] == 10 and byB[0] == 10:
+				byR[0] = 9;byG[0] = 9;byB[0] = 9;
+
+			return (byR,byG,byB)
+
+		elif compression == True:
+			return self.ObjectStorage
+
+
+	def outputToFile(self):
 		byR = bytearray(self.R)
 		byG = bytearray(self.G)
 		byB = bytearray(self.B)
@@ -380,9 +418,12 @@ class Frame():
 		for i in text:
 			if i in chars:
 				for p in chars[i]:
-					self.setPixel(pos+p[0],Y-p[1],color)
+					self.setPixel(pos+p[0],Y-p[1],color,ignore = True)
 			if i in spaces:
 				pos +=1+spaces[i]
 			else:
 				pos +=4;
+		if not str(2)+str(X)+str(Y) in ObjectHash:
+			self.ObjectStorage.append((2,X,Y,text,color[0],color[1],color[2]))
+			self.ObjectHash.append(str(2)+str(X)+str(Y))
 		return 1
