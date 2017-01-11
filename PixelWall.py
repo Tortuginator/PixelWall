@@ -30,12 +30,13 @@ class RenderEngine():
 		self.fps = fps;
 		self.width = width;
 		self.FrameRenderFunction = ();
-		self.CallbackOnRenderedFrame = ();
 		self.frameCount = 0
 		self.frameInSecond = 0
 		self.Animations = {} #All Animations are saved here
 		self.BitMapDB = {} #A temporary library of BMP maps
 		self.temporaryStorage = {}
+		self.passthrough = False
+
 	def pushFrame(self,type = "",compression = False,config = {}):
 
 		newFrame = self.FrameRenderFunction(Frame(self.height,self.width),self.fps,self.frameCount,self.frameInSecond)#call new frame
@@ -73,6 +74,9 @@ class RenderEngine():
 			self.frameInSecond = 1
 
 	def __adjustBrightness(self,newFrame):
+		if self.brightness > 1:return newFrame
+		if self.brightness < 0:return newFrame
+
 		for i in range(0,newFrame.PixelCount-1):
 			newFrame.R[i] = int(newFrame.R[i]*self.brightness)
 			newFrame.G[i] = int(newFrame.G[i]*self.brightness)
