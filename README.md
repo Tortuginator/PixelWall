@@ -7,10 +7,10 @@ The PixelWall system is divided into two main parts the RenderEngine and the Fra
 #TODO list
 
 - [ ] Fully implement the compression
-- [ ] Fully implement the output:TCPclient
-- [ ] Fully implement the input:TCPserver
+- [x] Fully implement the output:TCPclient
+- [x] Fully implement the input:TCPserver
 - [ ] Fully implement the output:serial
-- [ ] Fully implement the output:callback
+- [x] Fully implement the output:callback
 - [x] Fully implement the output:toFile (emulator)
 - [x] Fully implement basic drawing functions
 - [ ] Fully implement halfframes for the animations
