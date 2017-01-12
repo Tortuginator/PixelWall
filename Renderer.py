@@ -28,10 +28,77 @@ class socketNotInitialized(Exception):
         return "The socket was not initialized. I seems like you forgot that when you initialized the <TCPClient>. The socket can be initialized by calling \"reconnect()\""+ "\n" + repr(self.value)
 
 class FrameFormat():
-    def __init__(self):
-        self.compression = None
-        self.data = None
-        self.objects = None
+    def __init__(self,data = None,compression = None,objects = None):
+        if CompressionType.isCompression(compression):
+            self.compression = compression
+        else:
+            raise InvalidCompression; ##IMPLEMENT
+        self.data = data
+        self.objects = objects
+
+    def fromTransport(self,data):
+        #Convert:
+        data = bytearray(data);
+        Ldat = len(data);
+        #Structure:
+        #[Compression (0,1,2)][EXTRA+6]
+        if int(data[0]) in [CompressionType.No,CompressionType.Linear]:
+            #[Lengtha1][lengtha2][Lengthb1][lengthb2][lengthc1][lengthc2]
+            #totalLength = 255*Lengthxa[0-255] + Lengthxb[0-255]|| MAX: 65280bytes length*3 + 7
+            totalLengthR = int(ldat[1]) * 255 + int(ldat[2])
+            totalLengthG = int(ldat[3]) * 255 + int(ldat[4])
+            totalLengthB = int(ldat[5]) * 255 + int(ldat[6])
+            if Ldat != (totalLengthR + totalLengthG + totalLengthB+7):
+                print "[!][TCPs][FrameFormat] failed to decode. The lengths do not match. The packet will be ignored."
+                return False
+            newdata = [[],[],[]]
+            newdata[0] = data[8:8+totalLengthR]
+            newdata[1] = data[totalLengthR+8+1:totalLengthG+8+totalLengthR]
+            newdata[2] = data[totalLengthG+8+totalLengthR+1:totalLengthG+8+totalLengthR+totalLengthB]
+            self.data = newdata
+            self.compression = int(data[0])
+            return True
+        elif int(data[0]) == CompressionType.Object:
+            raise NotImplementedError;
+        return False
+
+    def toTransport(self,forceRaw = False):
+        if self.compression == CompressionType.No:
+            if not forceRaw:
+                self.compression == CompressionType.Linear
+                self.data = FrameFormat.__convertRawToLin(self.data)
+            else:
+                lenR = len(self.data[0])
+                lenG = len(self.data[1])
+                lenB = len(self.data[2])
+                if lenG != lenR != lenB:
+                    print "[!][FrameFormat][tT] the lenghts of the color arrays do not match in RAW mode!"
+
+                header = bytearray([0,lenR//255,lenR%255,lenG//255,lenG%255,lenB//255,lenB%255])
+                if type(self.data[0]) == list:
+                    R = bytearray(self.data[0])
+
+                if type(self.data[1]) == list:
+                    G = bytearray(self.data[1])
+
+                if type(self.data[2]) == list:
+                    B = bytearray(self.data[2])
+                return (header + R + G + B)
+
+        if self.compression == CompressionType.Linear:
+            lenR = len(self.data[0])
+            lenG = len(self.data[1])
+            lenB = len(self.data[2])
+            header = bytearray([1,lenR//255,lenR%255,lenG//255,lenG%255,lenB//255,lenB%255])
+            if type(self.data[0]) == list:
+                R = bytearray(self.data[0])
+
+            if type(self.data[1]) == list:
+                G = bytearray(self.data[1])
+
+            if type(self.data[2]) == list:
+                B = bytearray(self.data[2])
+            return (header + R + G + B)
 
     def toRaw(self):
         if self.compression == 0:
@@ -90,13 +157,9 @@ class FrameFormat():
 
     @staticmethod
     def __convertRawToLin(data):
-        indicator = 1
-        new = [[],[],[]]
-        cnt = -1
-        for i in data:
-            cnt +=1
-            run = 0
-            last = None
+        indicator = 1;replacement = 2;new = [[],[],[]];
+        for cnt in range(0,len(data)):
+            i = data[cnt];run = 0;last = None
             for x in range(0,len(i)):
                 if last == i[x]:
                     run += 1
@@ -104,13 +167,22 @@ class FrameFormat():
                 else:
                     if run == 3:#3
                         if x-3 >= 0:
-                            new[cnt].append(i[x-3])
+                            if i[x-1] == indicator:
+                                new[cnt].append(replacement)
+                            else:
+                                new[cnt].append(i[x-3])
                     if run > 1 and run < 4:#3,2
                         if x-2 >= 0:
-                            new[cnt].append(i[x-2])
+                            if i[x-2] == indicator:
+                                new[cnt].append(replacement)
+                            else:
+                                new[cnt].append(i[x-2])
                     if run > 0 and run < 4:#3,2,1
                         if x-1 >= 0:
-                            new[cnt].append(i[x-1])
+                            if i[x-1] == indicator:
+                                new[cnt].append(replacement)
+                            else:
+                                new[cnt].append(i[x-1])
                     #new[i].append(x[i])
                     #[Indicator][Value][Count]
                     if run > 3:
@@ -120,8 +192,12 @@ class FrameFormat():
                     last = i[x]
                     run = 1
             if x == len(i)-1:
-                new[cnt].append(i[x])
+                if i[x] == indicator:
+                    new[cnt].append(replacement)
+                else:
+                    new[cnt].append(i[x])
         return new
+
     def setData(self,data,compression):
         self.data = data
         self.compression = compression
@@ -156,6 +232,7 @@ class BinaryFile(Output):
         self.filename = filename
         self.filepath = path
         self.supportedCompression = [CompressionType.No,CompressionType.Linear,CompressionType.Object]
+
     def __preparedata(self, data):
         return data
 
@@ -304,7 +381,7 @@ class TCPServer(Input):
                 print "[+][TCPs] Client disconnected ", repr(client_address)
 
     def __verify(self,data):
-        return data;
+        return FrameFormat.fromTransport(data);
 
     def __updateIncoming(self,data):
         isOK = self.__verify(data);
