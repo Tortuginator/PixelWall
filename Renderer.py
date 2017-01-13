@@ -1,5 +1,5 @@
 import socket,sys
-import time
+import time,datetime
 from threading import Thread
 
 class CompressionType():
@@ -20,6 +20,20 @@ class failedToReconnect(Exception):
     def __str__(self):
         return "The socket tried 3 times in a row to connect to the server without success"+ "\n" + repr(self.value)
 
+class wrongObject(Exception):
+    def __init__(self, value = None):
+        self.value = value
+
+    def __str__(self):
+        return "It seems like a other object was expected: "+ "\n" + repr(self.value)
+
+class InvalidCompression(Exception):
+    def __init__(self, value = None):
+        self.value = value
+
+    def __str__(self):
+        return "It seems like the Compression given was not recognized "+ "\n" + repr(self.value)
+
 class socketNotInitialized(Exception):
     def __init__(self, value = None):
         self.value = value
@@ -27,12 +41,45 @@ class socketNotInitialized(Exception):
     def __str__(self):
         return "The socket was not initialized. I seems like you forgot that when you initialized the <TCPClient>. The socket can be initialized by calling \"reconnect()\""+ "\n" + repr(self.value)
 
+class PrintRegister():
+    def __init__(self):
+        self.currentlyPrinting = False
+        self.instance = None
+        self.register = []
+        self.__fireUp();
+
+    def __fireUp(self):
+        self.instance = Thread(target = PrintRegister.__print, args = (self, ))
+        self.instance.start();
+
+    def __print(self):
+        for i in self.register:
+            print i
+        #reset
+        self.register = []
+
+
+    def doPrint(self,out):
+        if not self.instance.isAlive:
+            self.__fireUp();
+        self.register.append(out);
+global PNR
+PNR = PrintRegister();
+class UtilPrint():
+    @staticmethod
+    def compose(sign,parent,function,message):
+        PNR.doPrint("[" + sign + "][" +parent+ "][" +function + "] " + message)
+
 class FrameFormat():
     def __init__(self,data = None,compression = None,objects = None):
-        if CompressionType.isCompression(compression):
-            self.compression = compression
+        if compression == None:
+            self.compression = None
         else:
-            raise InvalidCompression; ##IMPLEMENT
+            if CompressionType.isCompression(compression) :
+                self.compression = compression
+            else:
+                raise InvalidCompression;
+
         self.data = data
         self.objects = objects
 
@@ -49,7 +96,7 @@ class FrameFormat():
             totalLengthG = int(ldat[3]) * 255 + int(ldat[4])
             totalLengthB = int(ldat[5]) * 255 + int(ldat[6])
             if Ldat != (totalLengthR + totalLengthG + totalLengthB+7):
-                print "[!][TCPs][FrameFormat] failed to decode. The lengths do not match. The packet will be ignored."
+                UtilPrint.compose("!",self.__class__,__name__,"failed to decode. The lengths do not match. The packet will be ignored.")
                 return False
             newdata = [[],[],[]]
             newdata[0] = data[8:8+totalLengthR]
@@ -72,8 +119,7 @@ class FrameFormat():
                 lenG = len(self.data[1])
                 lenB = len(self.data[2])
                 if lenG != lenR != lenB:
-                    print "[!][FrameFormat][tT] the lenghts of the color arrays do not match in RAW mode!"
-
+                    UtilPrint.compose("!",self.__class__,__name__,"the lenghts of the color arrays do not match in RAW mode!")
                 header = bytearray([0,lenR//255,lenR%255,lenG//255,lenG%255,lenB//255,lenB%255])
                 if type(self.data[0]) == list:
                     R = bytearray(self.data[0])
@@ -143,7 +189,7 @@ class FrameFormat():
                             new[cnt].append(i[x+1])#new value
                         locked = x+2;
                     else:
-                        print "[!][Conv][LIN2RAW] found indicator byte at unintended position please check you indicator bytes"
+                        UtilPrint.compose("!","UDN",__name__,"found indicator byte at unintended position please check you indicator bytes")
                 elif x <= locked:
                     pass
                     #to be ignored, because theese are the indicator and value bytes
@@ -152,7 +198,7 @@ class FrameFormat():
 
         len_old = len(data[0])+ len(data[1]) + len(data[2])
         len_new = len(new[0])+ len(new[1]) + len(new[2])
-        print "[+][Conv][LIN2RAW] compression efficiency: ",100-int((float(len_old)/float(len_new))*100),"%"
+        UtilPrint.compose("+","UDN",__name__,"compression efficiency: " + repr(100-int((float(len_old)/float(len_new))*100)) + "%")
         return new;
 
     @staticmethod
@@ -258,14 +304,14 @@ class TCPClient(Output):
         if (self.failcounter >= self.failmax) and not force:
             raise failedToReconnect;
         try:
-            print "[+][TCPc]Connecting ",repr(self.ip),"@",repr(self.port)
+            UtilPrint.compose("+",self.__class__,__name__,"[+][TCPc]Connecting ",repr(self.ip),"@",repr(self.port))
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((self.ip, self.port))
             self.failcounter = 0
         except Exception,e :
             self.failcounter += 1
             self.__connect()
-            print "[!][TCPc]Socket excption, trying to reconnect: ", repr(e)
+            UtilPrint.compose("+",self.__class__,__name__,"[!][TCPc]Socket excption, trying to reconnect: ", repr(e))
 
     def reconnect(self,force = False):
         self.__connect(force);
@@ -275,7 +321,7 @@ class TCPClient(Output):
         return True
 
     def __prepareData(self,data):
-        return data
+        return data.toTransport();
 
     def output(self,data):
         data = self.__prepareData(data)
@@ -284,7 +330,7 @@ class TCPClient(Output):
         try:
             self.socket.send(data)
         except socket.timeout:
-            print "[!][TCPc]Socket timeout",repr(self.ip),"@",repr(self.port)
+            UtilPrint.compose("!",self.__class__,__name__,"Socket timeout",repr(self.ip),"@",repr(self.port))
             self.reconnect();
         #Connect
     def close(self):
@@ -355,12 +401,12 @@ class TCPServer(Input):
 
     def __fireUp(self):
         self.failcounter += 1
-        print "[+][TCPs] Starting..."
+        UtilPrint.compose("+",self.__class__,__name__,"Starting...")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.ip,self.port))
         self.instance = Thread(target = TCPServer.__srvThread, args = (self, ))
         self.instance.start();
-        print "[+][TCPs] Started"
+        UtilPrint.compose("+",self.__class__,__name__,"Started")
 
     @staticmethod
     def __srvThread(self):
@@ -369,16 +415,16 @@ class TCPServer(Input):
             connection, client_address = self.socket.accept()
             self.failcounter = 0;
             try:
-                print "[+][TCPs] Client connected ", repr(client_address)
+                UtilPrint.compose("+",self.__class__,__name__,"Client connected " + repr(client_address))
                 while True:
                     data = connection.recv(self.buffer)
                     if len(data) == 0: break
                     self.__updateIncoming(data);
                     #connection.sendall(data)
-                print "[+][TCPs] Client disconnected ", repr(client_address)
+                UtilPrint.compose("+",self.__class__,__name__,"Client disconnected " + repr(client_address))
             finally:
                 connection.close()
-                print "[+][TCPs] Client disconnected ", repr(client_address)
+                UtilPrint.compose("+",self.__class__,__name__,"Client disconnected "+ repr(client_address))
 
     def __verify(self,data):
         return FrameFormat.fromTransport(data);
@@ -389,11 +435,12 @@ class TCPServer(Input):
             self.data = isOK
             self.distinct = True
         else:
-            print "[!][TCPs] Recived corrupt package data. Dumping Frame"
+            UtilPrint.compose("!",self.__class__,__name__,"Recived corrupt package data. Dumping Frame")
 
     def callData(self,force = False):
         if not self.distinct is True and force is False:
             return False
+        self.distinct = False;
         #Check if server is still running
         if not self.instance.isAlive():
             if self.failcounter >= self.maxfails:
@@ -403,6 +450,78 @@ class TCPServer(Input):
 
     def updateSinceLastCall(self):
         return self.distinct;
+
+class TimeTrigger():
+    def __init__(self,timesPerSecond,function,args):
+        self.timesPerSecond = timesPerSecond
+        self.function = function
+        self.args = args
+        self.__setVars();
+        self.iteration = 0
+        self.isSleeping = True
+
+    def __setVars(self):
+        self.msDelta = int((1/float(timesPerSecond))*1000000)
+
+    def isDue(self,time):
+        if not((self.iteration * self.msDelta) < time):
+            return False
+        else:
+            return True
+
+    def doExecute(self, args = None):
+        if self.isDue is False:return False;
+        if args != None:
+            self.args = args
+
+        self.iteration +=1;
+        self.isSleeping = False
+        self.function(self.args);
+        self.isSleeping = True
+
+        if self.timesPerSecond-1 <= self.iteration:
+            self.reset();
+
+    def reset(self):
+        self.iteration = 0
+
+class TimeManager():
+        def __init__(self):
+            self.baseFrequency = 120
+            self.instance = None
+            self.triggers = []
+
+        def __fireUp(self):
+            for i in self.triggers:
+                if i is not type(TimeTrigger):
+                    raise wrongObject("Expecting TimeTrigger")
+
+
+        def __tmeThread(self,triggers):
+            innerTiming = datetime.datetime.now()
+            innerStep = 0
+            innerMicrosecondDelta = int(float(1/float(self.baseFrequency))*1000000)
+            while(True):
+                if not(innerStep*innerMicrosecondDelta <= ((datetime.datetime.now() - innerTiming).microseconds)):
+                    time.sleep(0.001)
+                    continue
+                if innerStep >= self.baseFrequency-1:
+                    innerStep = 0
+                    innerTiming = datetime.datetime.now()
+                innerStep +=1
+
+                for i in triggers:
+                    if i.isSleeping is True:
+                        try:
+                            i.doExecute()
+                        except Exception,e:
+                            UtilPrint.compose("!",self.__class__,__name__,"Exception occured for " + repr(i.function)  + " @iteration " + repr(innerStep))
+                            UtilPrint.compose("!",self.__class__,__name__,repr(e))
+
+        def __tmeExec(self,function,args):
+            pass
+
+
 
 
 if __name__ == "__main__":
@@ -415,6 +534,7 @@ if __name__ == "__main__":
     b = FrameFormat();
     b.setData(a.toLinear(),1);
     print b.toRaw();
+
 class Pixel():
     def __init__(X,Y):
         self.X = X
