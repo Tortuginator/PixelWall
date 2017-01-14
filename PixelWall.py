@@ -282,6 +282,7 @@ class Frame():
 		if not str(1)+str(x0)+str(y0)+str(radius) in self.ObjectHash:
 			self.ObjectStorage.append((4,x0,y0,radius,color[0],color[1],color[2]))
 			self.ObjectHash.append(str(1)+str(x0)+str(y0)+str(radius))
+
 	def drawRectangle(self,Xa,Xb,Ya,Yb,color,opacity = 1):
 		#if not self.isPixel(Xa,Ya):return 0;
 		#if not self.isPixel(Xb,Yb):return 0;

@@ -370,7 +370,7 @@ class PyGame(Input):
 class Function(Input):
     def __init__(self,function):
         self.function = function
-        self.supportedCompression = [CompressionType.No,CompressionType.Linear,CompressionType.Object]
+        self.supportedCompression = [CompressionType.No,CompressionType.Object]
 
     def callData(self,args):
         return self.function(args);
@@ -521,8 +521,217 @@ class TimeManager():
         def __tmeExec(self,function,args):
             pass
 
+class FrameFunction():
+    def __init__(self):
+        raise NotImplementedError
 
+    def Render(self,dFrame):
+        raise NotImplementedError
 
+    def Object(self):
+        raise NotImplementedError
+
+class Rectangle(FrameFunction):
+    def __init__(self,startPoint,endPoint,color,opacity):
+        self.color = color
+        self.startPoint = startPoint
+        self.endPoint = endPoint
+        self.opacity = opacity
+
+    def Render(self,dFrame):
+		if not Frame.isColor(color):return 0;
+		Yoffset = Yb-Ya
+        Yoffset = endPoint.Y - startPoint.Y
+		if Yoffset >= 0:
+			Yoffset +=1;
+		else:
+			Yoffset -=1;
+
+		Xoffset = endPoint.X - startPoint.X
+		if Xoffset >=0:
+			Xoffset += 1;
+		else:
+			Xoffset -= 1;
+
+		for p in range(0,Yoffset):
+			if not self.isPixel(Xa,Ya+p):continue;
+			Ioffset = self.getOffset(Xa,Ya+p)
+			for i in range(0,Xoffset):
+				self.R[Ioffset+i] = int(color[0]*opacity)
+				self.G[Ioffset+i] = int(color[1]*opacity)
+				self.B[Ioffset+i] = int(color[2]*opacity)
+
+        def Object(self):
+            return (self.startPoint,self.endPoint,self.color,self.opacity)
+
+class Circle(FrameFunction):
+    def __init__(self,centerPoint,color,radius,fill = False,fillcolor = 0,opacity = 1):
+        self.centerPoint = centerPoint
+        self.color = color
+        self.radius = radius
+        self.fill = fill
+        self.fillcolor = fillcolor
+        self.opacity = opacity
+
+    def Render(self,dFrame):
+        x0 = self.centerPoint.X
+        y0 = self.centerPoint.Y
+        if dFrame.isColor(self.color) is False:return 0;
+		colour = Frame.isColor(self.color);
+		#if Frame.isColor(fillColor) is False:return 0;
+		if self.radius <= 0:	return 0;
+
+		#Adjust the location
+
+		f = 1 - self.radius
+		ddf_x = 1
+		ddf_y = -2 * self.radius
+		x = 0
+		y = self.radius
+		self.setPixel(x0, y0 + self.radius, colour,merge = True,ignore = True)
+		self.setPixel(x0, y0 - self.radius, colour,merge = True,ignore = True)
+		self.setPixel(x0 + self.radius, y0, colour,merge = True,ignore = True)
+		self.setPixel(x0 - self.radius, y0, colour,merge = True,ignore = True)
+		while x < y:
+			if f >= 0:
+				y -= 1
+				ddf_y += 2
+				f += ddf_y
+			x += 1
+			ddf_x += 2
+			f += ddf_x
+			self.setPixel(x0 + x, y0 + y, colour,merge = True,ignore = True)
+			self.setPixel(x0 - x, y0 + y, colour,merge = True,ignore = True)
+			self.setPixel(x0 + x, y0 - y, colour,merge = True,ignore = True)
+			self.setPixel(x0 - x, y0 - y, colour,merge = True,ignore = True)
+			self.setPixel(x0 + y, y0 + x, colour,merge = True,ignore = True)
+			self.setPixel(x0 - y, y0 + x, colour,merge = True,ignore = True)
+			self.setPixel(x0 + y, y0 - x, colour,merge = True,ignore = True)
+			self.setPixel(x0 - y, y0 - x, colour,merge = True,ignore = True)
+
+    def Object(self):
+        return (self,centerPoint,color,radius)
+        
+class Text(FrameFunction):
+    def __init__(self,positionY,text,color):
+        self.text = text
+        self.color = color
+        self.positionY = positionY
+    def Render(self,dFrame):
+        if not Frame.isColor(self.color):return 0;
+		if not self.isPixel(self.position.X,self.position.Y):return 0;
+		spaces = {"!":1,"|":1,":":1,".":1}
+		chars = {	"0":[(0,0),(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(1,5),(0,5),(0,4),(0,3),(0,2),(0,1),(1,0)],
+					"1":[(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(1,4),(0,3)],
+					"2":[(0,0),(1,0),(2,0),(0,1),(1,2),(2,3),(2,4),(1,5),(0,4)],
+					"3":[(0,0),(1,0),(2,1),(1,2),(2,3),(1,4),(0,4)],
+					"4":[(2,0),(2,1),(2,2),(1,2),(0,2),(0,3),(0,4),(0,5),(2,3),(2,4)],
+					"5":[(0,1),(1,0),(2,1),(1,3),(0,3),(0,4),(0,5),(1,5),(2,5),(2,2)],
+					"6":[(0,1),(0,3),(1,0),(2,1),(1,2),(0,4),(1,5),(2,5),(0,2)],
+					"7":[(0,0),(0,1),(1,2),(1,3),(2,4),(0,5),(1,5),(2,5)],
+					"8":[(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(0,3),(2,3),(0,4),(1,4),(2,4)],
+					"9":[(2,0),(2,1),(2,2),(2,3),(2,4),(1,4),(0,4),(0,3),(0,2),(1,2)],
+
+					"a":[(0,0),(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(1,5),(0,5),(0,4),(0,3),(0,2),(0,1),(1,2)],
+					"b":[(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(1,0),(2,0),(1,2),(2,2),(2,1)],
+					"c":[(0,0),(0,1),(0,2),(1,0),(2,0),(1,2),(2,2)],
+					"d":[(0,0),(1,0),(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(0,1),(0,2),(1,2)],
+
+					"-":[(0,2),(1,2),(2,2)],
+					"_":[(0,0),(1,0),(2,0)],
+					":":[(0,1),(0,3)],
+					".":[(0,0)],
+					"|":[(0,0),(0,1),(0,2),(0,3),(0,4),(0,5)],
+                    "!":[(0,0),(0,2),(0,3),(0,4),(0,5)],
+					"+":[(1,1),(1,2),(1,3),(0,2),(2,2)]}
+		given = list(text)
+		pos = 0;
+		for i in text:
+			if i in chars:
+				for p in chars[i]:
+					self.setPixel(pos+p[0],self.positionY-p[1],color,ignore = True)
+			if i in spaces:
+				pos +=1+spaces[i]
+			else:
+				pos +=4;
+
+class Frame():
+	def __init__(self,height,width):
+		self.height = height;
+		self.width = width;
+		self.PixelCount = height*width
+        self.FunctionStorage = []
+		self.R = [0 for i in range(0,self.PixelCount)]
+		self.G = [0 for i in range(0,self.PixelCount)]
+		self.B = [0 for i in range(0,self.PixelCount)]
+
+	def __getPixel(self,X,Y):#WARNING no checks performed
+		return self.getPixel(X,Y,True);
+
+	def getOffset(self,X,Y):
+		return (Y*self.width)+X;
+
+	def getPixel(self,X,Y,performance = False):
+		if not performance :
+			if not self.isPixel(X,Y):return [];
+		Ioffset = self.getOffset(X,Y);
+		return [self.R[Ioffset],self.G[Ioffset],self.B[Ioffset]];
+
+	def isPixel(self,X,Y):
+		if not X <= self.width-1:
+			return False
+		if not Y <= self.height-1:
+			return False
+		return True
+
+	def __setPixel(self,X,Y,color):#WARNING, no checks will be performed
+		return self.setPixel(X,Y,color,merge = True)
+
+	def setPixel(self,X,Y,color,merge = False,offset = -1):
+		if not self.isPixel(X,Y):
+			return 0
+		if not Frame.isColor(color):
+			return 0
+
+        if offset != -1:
+		    Ioffset = offset;
+            if not self.PixelCount < Ioffset:
+                return 0
+        else:
+            if not X >= 0 or not Y >= 0:return 0;
+		    Ioffset = self.getOffset(X,Y);
+
+		if (self.R[Ioffset] != 0 or self.G[Ioffset] != 0 or self.B[Ioffset] != 0) and merge == True:
+			self.R[Ioffset] = color[0]/2 + self.R[Ioffset]/2
+			self.G[Ioffset] = color[1]/2 + self.G[Ioffset]/2
+			self.B[Ioffset] = color[2]/2 + self.B[Ioffset]/2
+		else:
+			self.R[Ioffset] = color[0]
+			self.G[Ioffset] = color[1]
+			self.B[Ioffset] = color[2]
+
+		return 1
+
+	@staticmethod
+	def mixGradientColor(colorA,colorB,steps,step):
+		if not Frame.isColor(colorA):return 0
+		if not Frame.isColor(colorB):return 0
+
+		colorC = []
+		colorC.append(colorA[0] + (colorA[0]-colorB[0])*(step/steps))
+		colorC.append(colorA[1] + (colorA[1]-colorB[1])*(step/steps))
+		colorC.append(colorA[2] + (colorA[2]-colorB[2])*(step/steps))
+		return (int(colorC[0]),int(colorC[1]),int(colorC[2]))
+
+	@staticmethod
+	def isColor(color):
+		if not 0 <= int(color[0]) <= 255:
+			return False
+		if not 0 <= int(color[1]) <= 255:
+			return False
+		if not 0 <= int(color[2]) <= 255:
+			return False
+		return (int(color[0]),int(color[1]),int(color[2]))
 
 if __name__ == "__main__":
     a = FrameFormat()
@@ -540,9 +749,49 @@ class Pixel():
         self.X = X
         self.Y = Y
 
+class Color():
+    def __init__(self,R,G,B):
+        self.R = R
+        self.G = G
+        self.B = B
+
+    def isColor(self):
+		if not 0 <= self.R<= 255:
+			return False
+		if not 0 <= self.G <= 255:
+			return False
+		if not 0 <= self.B <= 255:
+			return False
+        return True
+
+    def get(self):
+        return (self.R,self.G,self.B)
+
+    def mix(self,colorB):
+        raise NotImplementedError
+
 class Engine():
     def __init__(self,height,width):
         self.baseFrequency = 30
         self.frameHeight = height
         self.frameWidth = width
         self.brightness = float(1)
+        self.frame = Frame(height,width)
+
+    def __adjustBrightness(self):
+		if self.brightness > 1:return
+		if self.brightness < 0:return
+
+		for i in range(0,self.PixelCount-1):
+			self.frame.R[i] = int(self.frame.R[i]*self.brightness)
+		    self.frame.G[i] = int(self.frame.G[i]*self.brightness)
+			self.frame.B[i] = int(self.frame.B[i]*self.brightness)
+
+    def setBrightness(self,brightness):
+    	if not 0 <= brightness <= 1:
+    		return 0
+    	self.brightness = brightness
+    	return 1
+
+    def getBrightness(self):
+    	return self.brightness;
