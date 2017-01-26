@@ -95,9 +95,9 @@ class FrameFormat():
 		if int(data[0]) in [CompressionType.No,CompressionType.Linear]:
 			#[Lengtha1][lengtha2][Lengthb1][lengthb2][lengthc1][lengthc2]
 			#totalLength = 255*Lengthxa[0-255] + Lengthxb[0-255]|| MAX: 65280bytes length*3 + 7
-			totalLengthR = int(ldat[1]) * 255 + int(ldat[2])
-			totalLengthG = int(ldat[3]) * 255 + int(ldat[4])
-			totalLengthB = int(ldat[5]) * 255 + int(ldat[6])
+			totalLengthR = int(ldat[1]) * 254 + int(ldat[2])
+			totalLengthG = int(ldat[3]) * 254 + int(ldat[4])
+			totalLengthB = int(ldat[5]) * 254 + int(ldat[6])
 			if Ldat != (totalLengthR + totalLengthG + totalLengthB+7):
 				UtilPrint.compose("!",self.__class__,__name__,"failed to decode. The lengths do not match. The packet will be ignored.")
 				return False
@@ -114,7 +114,6 @@ class FrameFormat():
 
 	def toTransport(self,forceRaw = False):
 		if self.compression == CompressionType.Object:
-			print "conv to raw"
 			try:
 				self.__convObjToRaw();
 			except Exception,e:
@@ -123,7 +122,6 @@ class FrameFormat():
 			if not forceRaw:
 				self.data = FrameFormat.__convertRawToLin(self.data)
 				self.compression = CompressionType.Linear
-				print "convert2"
 			else:
 				lenR = len(self.data[0])
 				lenG = len(self.data[1])
@@ -146,18 +144,17 @@ class FrameFormat():
 			lenR = len(self.data[0])
 			lenG = len(self.data[1])
 			lenB = len(self.data[2])
-			header = bytearray([1,lenR//255,lenR%255,lenG//255,lenG%255,lenB//255,lenB%255])
+			print [1,lenR//254,lenR%254,lenG//254,lenG%254,lenB//254,lenB%254]
+			header = bytearray([1,lenR//254,lenR%254,lenG//254,lenG%254,lenB//254,lenB%254])
 			if type(self.data[0]) == list:
-				print self.data[0]
 				R = bytearray(self.data[0])
-				print "R"
-				print R
+				print self.data[0]
 			if type(self.data[1]) == list:
 				G = bytearray(self.data[1])
 
 			if type(self.data[2]) == list:
 				B = bytearray(self.data[2])
-			print B
+
 			return (header + R + G + B)
 
 	def toRaw(self):
@@ -231,51 +228,62 @@ class FrameFormat():
 		len_old = len(data[0])+ len(data[1]) + len(data[2])
 		len_new = len(new[0])+ len(new[1]) + len(new[2])
 		UtilPrint.compose("+","UDN",__name__,"compression efficiency: " + repr(100-int((float(len_old)/float(len_new))*100)) + "%")
-		return new;
+		return new
 
 	@staticmethod
 	def __convertRawToLin(data):
 		indicator = 1;replacement = 2;new = [[],[],[]];
-		print "conv3"
-		for cnt in range(0,len(data)):
-			i = data[cnt];run = 0;last = None
-			for x in range(0,len(i)):
-				if last == i[x]:
-					run += 1
-					#not over 255
+		for channel in range(0,len(data)):
+			temporary = []
+			lastPoint = None
+			for point in range(0,len(data[channel])):
+				if lastPoint != data[channel][point]:
+					if len(temporary) <= 3:
+						if len(temporary) != 0:
+							for i in temporary:
+								if i == indicator:
+									new[channel].append(replacement)
+								else:
+									new[channel].append(i)
+					else:
+						if len(temporary) > 255:
+							for i in range(1,(len(temporary)-1)//254):
+								new[channel].append(indicator)
+								new[channel].append(temporary[0])
+								new[channel].append(254)
+							new[channel].append(indicator)
+							new[channel].append(temporary[0])
+							new[channel].append((len(temporary)-1)%254)
+						else:
+							new[channel].append(indicator)
+							new[channel].append(temporary[0])
+							new[channel].append(len(temporary)-1)
+					lastPoint = data[channel][point]
+					temporary = [data[channel][point]]
 				else:
-					if run == 3:#3
-						if x-3 >= 0:
-							if i[x-1] == indicator:
-								new[cnt].append(replacement)
-							else:
-								new[cnt].append(i[x-3])
-					if run > 1 and run < 4:#3,2
-						if x-2 >= 0:
-							if i[x-2] == indicator:
-								new[cnt].append(replacement)
-							else:
-								new[cnt].append(i[x-2])
-					if run > 0 and run < 4:#3,2,1
-						if x-1 >= 0:
-							if i[x-1] == indicator:
-								new[cnt].append(replacement)
-							else:
-								new[cnt].append(i[x-1])
-					#new[i].append(x[i])
-					#[Indicator][Value][Count]
-					if run > 3:
-						new[cnt].append(indicator)
-						new[cnt].append(last)
-						new[cnt].append(run-1)
-					last = i[x]
-					run = 1
-			if x == len(i)-1:
-				if i[x] == indicator:
-					new[cnt].append(replacement)
+					if data[channel][point] == indicator:
+						temporary.append(replacement)
+					else:
+						temporary.append(data[channel][point])
+
+			if len(temporary) > 255:
+				for i in range(1,(len(temporary)-1)//254):
+					new[channel].append(indicator)
+					new[channel].append(temporary[0])
+					new[channel].append(254)
+				new[channel].append(indicator)
+				new[channel].append(temporary[0])
+				new[channel].append((len(temporary)-1)%254)
+			elif len(temporary) > 0:
+				new[channel].append(indicator)
+				new[channel].append(temporary[0])
+				new[channel].append(len(temporary)-1)
+			else:
+				if lastPoint == indicator:
+					new[channel].append(replacement)
 				else:
-					new[cnt].append(i[x])
-		print new
+					new[channel].append(lastPoint)
+		print "COMPLETE"
 		return new
 
 	def setData(self,data,compression):
@@ -318,10 +326,11 @@ class BinaryFile(Output):
 	def output(self,data):
 		print "saving"
 		data = self.__prepareData(data);
-		print data
+		print "Datalength:", len(data)
 		with open(self.filepath + self.filename, "wb") as f:
 			f.write(data)
 		print "complete"
+
 class TCPClient(Output):
 	def __init__(self,ip,port,connectOnInit = True):
 		self.ip = ip
@@ -338,14 +347,14 @@ class TCPClient(Output):
 		if (self.failcounter >= self.failmax) and not force:
 			raise failedToReconnect;
 		try:
-			UtilPrint.compose("+",self.__class__,__name__,"[+][TCPc]Connecting ",repr(self.ip),"@",repr(self.port))
+			UtilPrint.compose("+",self.__class__,__name__,"Connecting ",repr(self.ip),"@",repr(self.port))
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.socket.connect((self.ip, self.port))
 			self.failcounter = 0
 		except Exception,e :
 			self.failcounter += 1
 			self.__connect()
-			UtilPrint.compose("+",self.__class__,__name__,"[!][TCPc]Socket excption, trying to reconnect: ", repr(e))
+			UtilPrint.compose("+",self.__class__,__name__,"Socket excption, trying to reconnect: ", repr(e))
 
 	def reconnect(self,force = False):
 		self.__connect(force);
@@ -412,7 +421,6 @@ class Function(Input):
 
 	def callData(self):
 		X = self.function(self.args);
-		print X.getObjects()
 		#def __init__(self,data = None,compression = None,objects = None):
 		return FrameFormat(data = X.getColorArr(),compression = CompressionType.Object,objects = X.getObjects())
 
@@ -500,34 +508,26 @@ class TimeTrigger():
 		self.function = function
 		self.args = args
 		self.__setVars();
-		self.iteration = 0
 		self.isSleeping = True
+		self.next = datetime.datetime.now()
 
 	def __setVars(self):
-		self.msDelta = int((1/float(self.timesPerSecond))*1000000)
+		self.msDelta = float(1)/float(self.timesPerSecond)
 
-	def isDue(self,time):
-		if not((self.iteration * self.msDelta) < time):
-			return False
-		else:
+	def isDue(self):
+		if self.next < datetime.datetime.now():
 			return True
+		return False
 
 	def doExecute(self, args = None):
-		if self.isDue is False:return False;
+		if self.isDue() is False:return False;
+		self.next = datetime.datetime.now() + datetime.timedelta(seconds = self.msDelta)
 		if args != None:
 			self.args = args
-
-		self.iteration +=1;
 		self.isSleeping = False
 		self.function(self.args);
 		self.isSleeping = True
-
-		if self.timesPerSecond-1 <= self.iteration:
-			self.reset();
 		return True
-
-	def reset(self):
-		self.iteration = 0
 
 class TimeManager():
 		def __init__(self):
@@ -536,31 +536,23 @@ class TimeManager():
 			self.triggers = []
 
 		def fireUp(self):
-			for i in self.triggers:
-				pass
-				#if i is not type(TimeTrigger):
-				#	print type(TimeTrigger)
-				#	raise wrongObject("Expecting TimeTrigger")
 			self.instance = Thread(target = TimeManager.__tmeThread, args = (self,self.triggers))
 			self.instance.start();
 
 		def __tmeThread(self,triggers):
 			#innerTiming = datetime.datetime.now()
-			innerTiming = current_milli_time();
 			innerStep = 0
-			innerMicrosecondDelta = int(float(1/float(self.baseFrequency))*1000000)
+			innerMicrosecondDelta = (int(float(1)/float(self.baseFrequency))*100000)
 			while(True):
 				#if not(innerStep*innerMicrosecondDelta <= ((datetime.datetime.now() - innerTiming).microseconds)):
-				if not(innerStep*innerMicrosecondDelta <= current_milli_time()-innerTiming):
+				if innerStep*innerMicrosecondDelta > current_milli_time():
 					time.sleep(0.001)
 					continue
 				#Start Inner Time measurenemt, for Calculations
-
 				if innerStep >= self.baseFrequency-1:
 					innerStep = 0
 					innerTiming = datetime.datetime.now()
 				innerStep +=1
-
 				for i in triggers:
 					if i.isSleeping is True:
 						try:
@@ -716,7 +708,8 @@ class Frame():
 		self.G = [0 for i in range(0,self.PixelCount)]
 		self.B = [0 for i in range(0,self.PixelCount)]
 		self.object = []
-
+	def __str__(self):
+		print self.R,self.G,self.B
 	def __add__(self,other):
 		if not self.PixelCount == other.PixelCount:
 			return #EXCEPTION
@@ -868,28 +861,23 @@ class Engine():
 		return self.brightness;#
 
 	def Render(self):
-		print "Rendering"
 		dFrame = Frame(self.frameHeight,self.frameWidth)
-
 		updatedFrame = self.Xinput.updateSinceLastCall()
-		print updatedFrame
 		if not updatedFrame:
 			return
 		self.Xinput.setArgs(dFrame)
-		print "args"
 		A = self.Xinput.callData()
-		print "output"
 		try:
 			A.setSize(self.frameHeight,self.frameWidth);
 			self.Xoutput.output(A)
 			self.lastFrame = A
 		except Exception,e:
 			print e
-		print "exit"
+
 if __name__ == "__main__":
 	def testRND(dFrame):
 		try:
-			p = Rectangle(Pixel(0,0),Pixel(10,10),(100,100,100),1)
+			p = Rectangle(Pixel(0,0),Pixel(0,26),(100,100,100),1)
 			dFrame.AddObject(p);
 		except Exception,e:
 			print e
@@ -897,4 +885,5 @@ if __name__ == "__main__":
 	F = Function(testRND);
 	O = BinaryFile()
 	R = Engine(28,28,F,O)
+	R.baseFrequency = 2
 	R.fireUp();
