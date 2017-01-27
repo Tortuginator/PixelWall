@@ -1,5 +1,5 @@
 import socket,sys
-import time,datetime
+import time,datetime,serial
 from threading import Thread
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -313,6 +313,21 @@ class Output():
 	#ABSTRACT
 	def output(self,data):
 		raise NotImplementedError;
+
+class Serial(Output):
+	def __init__(self,port = "COM3"):
+		self.supportedCompression = [CompressionType.No,CompressionType.Linear,CompressionType.Object]
+		self.port = port
+		self.baudrate = 1000000
+		self.ser = None
+
+	def __fireUp(self):
+		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
+		self.ser.open()
+
+	#ABSTRACT
+	def output(self,data):
+		self.ser.write(bytes(data))
 
 class BinaryFile(Output):
 	def __init__(self, filename = "output.bin", path = ""):
@@ -709,7 +724,7 @@ class Frame():
 		self.B = [0 for i in range(0,self.PixelCount)]
 		self.object = []
 	def __str__(self):
-		print self.R,self.G,self.B
+		return self.R,self.G,self.B
 	def __add__(self,other):
 		if not self.PixelCount == other.PixelCount:
 			return #EXCEPTION
