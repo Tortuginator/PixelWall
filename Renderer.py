@@ -318,15 +318,18 @@ class Serial(Output):
 	def __init__(self,port = "COM3"):
 		self.supportedCompression = [CompressionType.No,CompressionType.Linear,CompressionType.Object]
 		self.port = port
-		self.baudrate = 1000000
+		self.baudrate = 9600
 		self.ser = None
-
+		self.__fireUp();
 	def __fireUp(self):
 		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
+		self.ser.close()#WTF?, BUGFIX
 		self.ser.open()
 
 	#ABSTRACT
 	def output(self,data):
+		data = data.toTransport();
+		print "Sending", len(data), "bytes"
 		self.ser.write(bytes(data))
 
 class BinaryFile(Output):
@@ -873,7 +876,7 @@ class Engine():
 		raise NotImplementedError
 
 	def getBrightness(self):
-		return self.brightness;#
+		return self.brightness;
 
 	def Render(self):
 		dFrame = Frame(self.frameHeight,self.frameWidth)
@@ -898,7 +901,8 @@ if __name__ == "__main__":
 			print e
 		return dFrame
 	F = Function(testRND);
-	O = BinaryFile()
+	#O = BinaryFile()
+	O = Serial(port = "COM10")
 	R = Engine(28,28,F,O)
 	R.baseFrequency = 2
 	R.fireUp();
