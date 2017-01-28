@@ -68,7 +68,7 @@ void renderTypeZero() {
     Serial.println("0rnd");
     for (int i = 0; i < (frameLength / 3); i++) {
       if (i < allpixels) {
-        long color = ((long)frame[i] << 16) | ((long)frame[i + innerLength] << 8) | (long)frame[i + innerLength*2];
+        long color = (frame[i] << 16) | (frame[i + innerLength] << 8) | frame[i + innerLength*2];
         Serial.println("R:" + String(frame[i]) + " G:" + String(frame[i + innerLength]) + " B:" + String(frame[i + innerLength*2]));
         Serial.println(color, HEX);
         leds.setPixel(i, color);

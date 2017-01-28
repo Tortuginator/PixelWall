@@ -6,7 +6,7 @@ scon.close()
 scon.open()
 
 
-testscreen = bytearray([200,0,11,0,100,200,200,100,100,200,200,100,100,200,200,100])
+testscreen = bytearray([200,0,12,0,100,200,200,100,100,200,200,100,100,200,200,100])
 scon.write(bytes(testscreen))
 lastVal = False
 while True:
