@@ -112,6 +112,24 @@ class FrameFormat():
 			raise NotImplementedError;
 		return False
 
+	def toLinearV2(self,prevframe):
+		Rt = []
+		lastPos = 0
+		for i in range(0,len(self.R)):
+			if self.R[i] == prevframe[i]:
+				pass
+			else:
+				if lastPos == i-1:
+					Rt.append(self.R[i])
+				else:
+					for i in range(0,(i-lastPos)//255)
+						Rt.append(1)
+						Rt.append(255)
+					Rt.append(1)
+					Rt.append((i-lastPos)%255)
+				Rt.append(self.R[i])
+				lastPos = i
+
 	def toTransport(self,forceRaw = False):
 		if self.compression == CompressionType.Object:
 			try:
