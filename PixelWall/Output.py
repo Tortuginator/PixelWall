@@ -1,15 +1,10 @@
+import serial,Core,Compression
+from threading import Thread
+
 class Output():
 	def __init__(self):
 		self.type = None
-		self.compression = False
 		self.fps = 30
-		self.supportedCompression = [None]
-
-	def setCompression(self,compression):
-		if not type(compression) is bool:
-			return False
-		self.compression = compression
-		return True
 
 	def setFPS(self,fps):
 		fps = int(fps)
@@ -24,7 +19,6 @@ class Output():
 
 class Serial(Output):
 	def __init__(self,port = "COM3"):
-		self.supportedCompression = [CompressionType.No,CompressionType.Linear,CompressionType.Object]
 		self.port = port
 		self.baudrate = 1000000
 		self.ser = None
@@ -41,10 +35,9 @@ class BinaryFile(Output):
 	def __init__(self, filename = "output.bin", path = ""):
 		self.filename = filename
 		self.filepath = path
-		self.supportedCompression = [CompressionType.No,CompressionType.Linear,CompressionType.Object]
 
 	def __prepareData(self, data):
-		return data.toTransport()
+		return Compression.toTransportfromRaw(Compression.toLinearfromRaw(data))
 
 	def output(self,data):
 		print "saving"
@@ -61,7 +54,6 @@ class TCPClient(Output):
 		self.failcounter = 0;
 		self.failmax = 3;
 		self.socket = None
-		self.supportedCompression = [CompressionType.No,CompressionType.Linear,CompressionType.Object]
 
 		if connectOnInit:
 			self.__connect();
@@ -70,14 +62,14 @@ class TCPClient(Output):
 		if (self.failcounter >= self.failmax) and not force:
 			raise failedToReconnect;
 		try:
-			UtilPrint.compose("+",self.__class__,__name__,"Connecting ",repr(self.ip),"@",repr(self.port))
+			Core.UtilPrint.compose("+",self.__class__,__name__,"Connecting ",repr(self.ip),"@",repr(self.port))
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.socket.connect((self.ip, self.port))
 			self.failcounter = 0
 		except Exception,e :
 			self.failcounter += 1
 			self.__connect()
-			UtilPrint.compose("+",self.__class__,__name__,"Socket excption, trying to reconnect: ", repr(e))
+			Core.UtilPrint.compose("+",self.__class__,__name__,"Socket excption, trying to reconnect: ", repr(e))
 
 	def reconnect(self,force = False):
 		self.__connect(force);
@@ -87,7 +79,7 @@ class TCPClient(Output):
 		return True
 
 	def __prepareData(self,data):
-		return data.toTransport();
+		return Compression.toTransportfromLinear(Compression.toLinearfromRaw(data))
 
 	def output(self,data):
 		data = self.__prepareData(data)
@@ -96,7 +88,7 @@ class TCPClient(Output):
 		try:
 			self.socket.send(data)
 		except socket.timeout:
-			UtilPrint.compose("!",self.__class__,__name__,"Socket timeout",repr(self.ip),"@",repr(self.port))
+			Core.UtilPrint.compose("!",self.__class__,__name__,"Socket timeout",repr(self.ip),"@",repr(self.port))
 			self.reconnect();
 		#Connect
 	def close(self):

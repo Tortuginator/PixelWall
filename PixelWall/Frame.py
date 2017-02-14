@@ -8,8 +8,10 @@ class Frame():
 		self.G = [0 for i in range(0,self.PixelCount)]
 		self.B = [0 for i in range(0,self.PixelCount)]
 		self.object = []
+
 	def __str__(self):
 		return self.R,self.G,self.B
+
 	def __add__(self,other):
 		if not self.PixelCount == other.PixelCount:
 			return #EXCEPTION
@@ -41,32 +43,32 @@ class Frame():
 	def getColorArr(self):
 		return [self.R,self.G,self.B]
 
-	def __getPixel(self,X,Y):#WARNING no checks performed
-		return self.getPixel(X,Y,True);
+	def __getPixel(self,pnt):#WARNING no checks performed
+		return self.getPixel(pnt[0],pnt[1],True);
 
-	def getOffset(self,X,Y):
-		return (Y*self.width)+X;
+	def getOffset(self,pnt):
+		return (pnt[1]*self.width)+pnt[0];
 
-	def getPixel(self,X,Y,performance = False):
+	def getPixel(self,pnt,performance = False):
 		if not performance :
-			if not self.isPixel(X,Y):return [];
-		Ioffset = self.getOffset(X,Y);
+			if not self.isPixel(pnt):return [];
+		Ioffset = self.getOffset(pnt)
 		return [self.R[Ioffset],self.G[Ioffset],self.B[Ioffset]];
 
-	def isPixel(self,X,Y):
-		if not X <= self.width-1:
+	def isPixel(self,pnt):
+		if not pnt[0] <= self.width-1:
 			return False
-		if not Y <= self.height-1:
+		if not pnt[1] <= self.height-1:
 			return False
 		return True
 
-	def __setPixel(self,X,Y,color):#WARNING, no checks will be performed
-		return self.setPixel(X,Y,color,merge = True)
+	def __setPixel(self,pnt,color):#WARNING, no checks will be performed
+		return self.setPixel(pnt,color,merge = True)
 
-	def setPixel(self,X,Y,color,merge = False,offset = -1):
-		if not self.isPixel(X,Y):
+	def setPixel(self,pnt,color,merge = False,offset = -1):
+		if not self.isPixel(pnt):
 			return 0
-		if not Frame.isColor(color):
+		if not Core.isColor(color):
 			return 0
 
 		if offset != -1:
@@ -74,8 +76,8 @@ class Frame():
 			if not self.PixelCount < Ioffset:
 				return 0
 		else:
-			if not X >= 0 or not Y >= 0:return 0;
-			Ioffset = self.getOffset(X,Y);
+			if not pnt[0] >= 0 or not pnt[1] >= 0:return 0;
+			Ioffset = self.getOffset(pnt);
 
 		if (self.R[Ioffset] != 0 or self.G[Ioffset] != 0 or self.B[Ioffset] != 0) and merge == True:
 			self.R[Ioffset] = color[0]/2 + self.R[Ioffset]/2
