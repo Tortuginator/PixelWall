@@ -37,18 +37,14 @@ class TimeManager():
 
 	def fireUp(self):
 		self.instance = Thread(target = TimeManager.__tmeThread, args = (self,self.triggers))
-        #self.instance.Start()
 
 	def __tmeThread(self,triggers):
-		#innerTiming = datetime.datetime.now()
 		innerStep = 0
 		innerMicrosecondDelta = (int(float(1)/float(self.baseFrequency))*100000)
 		while(True):
-			#if not(innerStep*innerMicrosecondDelta <= ((datetime.datetime.now() - innerTiming).microseconds)):
 			if innerStep*innerMicrosecondDelta > current_milli_time():
 				time.sleep(0.001)
 				continue
-			#Start Inner Time measurenemt, for Calculations
 			if innerStep >= self.baseFrequency-1:
 				innerStep = 0
 				innerTiming = datetime.datetime.now()

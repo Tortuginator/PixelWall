@@ -746,6 +746,7 @@ class Frame():
 		self.object = []
 	def __str__(self):
 		return self.R,self.G,self.B
+		
 	def __add__(self,other):
 		if not self.PixelCount == other.PixelCount:
 			return #EXCEPTION

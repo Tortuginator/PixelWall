@@ -3,16 +3,7 @@ from threading import Thread
 
 class Output():
 	def __init__(self):
-		self.type = None
-		self.fps = 30
-
-	def setFPS(self,fps):
-		fps = int(fps)
-		if fps <= 0:
-			return False
-		self.fps = fps
-		return True
-
+		pass
 	#ABSTRACT
 	def output(self,data):
 		raise NotImplementedError;

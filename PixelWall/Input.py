@@ -5,16 +5,7 @@ import Core, Compression
 
 class Input():
     def __init__(self):
-    	self.fps = 30
-    	self.data = None
     	self.distinct = None
-
-    def setFPS(self,fps):
-    	fps = int(fps)
-    	if fps <= 0:
-    		return False
-    	self.fps = fps
-    	return True
 
     def callData(self):
     	raise NotImplementedError;
@@ -42,8 +33,7 @@ class Function(Input):
 
 	def callData(self):
 		X = self.function(self.args);
-		#def __init__(self,data = None,compression = None,objects = None):
-		#return FrameFormat(data = X.getColorArr(),compression = CompressionType.Object,objects = X.getObjects())
+		return X
 
 	def updateSinceLastCall(self):
 		return True;
@@ -52,16 +42,16 @@ class Function(Input):
 		self.args = args
 
 class TCPServer(Input):
-	def __init__(self,ip = '',port = 4000):
-		self.ip = ip;
-		self.port = port;
-		self.instance = None
-		self.socket = None
-		self.buffer = 1024*500
-		self.distinct = None
-		self.failcounter = 0
-		self.maxfails = 3
-		self.__fireUp();
+    def __init__(self,ip = '',port = 4000):
+        self.ip = ip
+        self.port = port
+        self.instance = None
+        self.socket = None
+        self.buffer = 1024*500
+        self.distinct = None
+        self.failcounter = 0
+        self.maxfails = 3
+        self.__fireUp();
 
 	def setBuffer(self,buffer):
 		if buffer != int(buffer) or not buffer > 0:
@@ -100,10 +90,10 @@ class TCPServer(Input):
 	def __verify(self,data):
 		return Compression.toRawfromLinear(Compression.toLinearfromTransport(data))
 
-	def __updateIncoming(self,data):
-		isOK = self.__verify(data);
-		self.data = isOK
-	    self.distinct = True
+    def __updateIncoming(self,data):
+        isOK = self.__verify(data);
+        self.data = isOK
+        self.distinct = True
 		#Core.UtilPrint.compose("!",self.__class__,__name__,"Recived corrupt package data. Dumping Frame")
 
 	def callData(self,force = False):
