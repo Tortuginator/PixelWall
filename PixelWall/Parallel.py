@@ -36,26 +36,34 @@ class TimeManager():
 		self.triggers = []
 
 	def fireUp(self):
-		self.instance = Thread(target = TimeManager.__tmeThread, args = (self,self.triggers))
+		try:
+			self.instance = Thread(target = TimeManager.__tmeThread, args = (self,))
+			self.instance.start()
+			print "[+][PixelWall\Parallel\TimeManager][fireUp] Management thread started"
+		except Exception,e:
+			print e
 
-	def __tmeThread(self,triggers):
-		innerStep = 0
-		innerMicrosecondDelta = (int(float(1)/float(self.baseFrequency))*100000)
-		while(True):
-			if innerStep*innerMicrosecondDelta > current_milli_time():
-				time.sleep(0.001)
-				continue
-			if innerStep >= self.baseFrequency-1:
-				innerStep = 0
-				innerTiming = datetime.datetime.now()
-			innerStep +=1
-			for i in triggers:
-				if i.isSleeping is True:
-					try:
-						i.doExecute()
-					except Exception,e:
-						Core.UtilPrint.compose("!",self.__class__,__name__,"Exception occured for " + repr(i.function)  + " @iteration " + repr(innerStep))
-						Core.UtilPrint.compose("!",self.__class__,__name__,repr(e))
+	def __tmeThread(self):
+		try:
+			innerStep = 0
+			innerMicrosecondDelta = (int(float(1)/float(self.baseFrequency))*100000)
+			while(True):
+				if innerStep*innerMicrosecondDelta > Core.current_milli_time():
+					time.sleep(0.001)
+					continue
+				if innerStep >= self.baseFrequency-1:
+					innerStep = 0
+					innerTiming = datetime.datetime.now()
+				innerStep +=1
+				for i in self.triggers:
+					if i.isSleeping is True:
+						try:
+							i.doExecute()
+						except Exception,e:
+							print "[!][PixelWall\Parallel\TimeManager][__tmeThread] Exception occured for " + repr(i.function)  + " @iteration " + repr(innerStep)
+							print repr(e)
+		except Exception,e:
+			print e
 
 		def __tmeExec(self,function,args):
 			pass

@@ -1,3 +1,4 @@
+import Core,Exceptions
 class Frame():
 	def __init__(self,height,width):
 		self.height = height;
@@ -9,8 +10,8 @@ class Frame():
 		self.B = [0 for i in range(0,self.PixelCount)]
 		self.object = []
 
-	def __str__(self):
-		return self.R,self.G,self.B
+	#def __str__(self):
+		#return str(self.R,self.G,self.B)
 
 	def __add__(self,other):
 		if not self.PixelCount == other.PixelCount:
@@ -44,10 +45,13 @@ class Frame():
 		return [self.R,self.G,self.B]
 
 	def __getPixel(self,pnt):#WARNING no checks performed
-		return self.getPixel(pnt[0],pnt[1],True);
+		return self.getPixel(pnt,True);
 
 	def getOffset(self,pnt):
-		return (pnt[1]*self.width)+pnt[0];
+		if not isinstance(pnt,Core.point):
+			raise Exceptions.unexpectedType(variable = "pnt",type="Core.Point")
+
+		return (pnt.x*self.width)+pnt.y;
 
 	def getPixel(self,pnt,performance = False):
 		if not performance :
@@ -56,9 +60,11 @@ class Frame():
 		return [self.R[Ioffset],self.G[Ioffset],self.B[Ioffset]];
 
 	def isPixel(self,pnt):
-		if not pnt[0] <= self.width-1:
+		if not isinstance(pnt,Core.point):
+			raise Exceptions.unexpectedType(variable = "pnt",type="Core.Point")
+		if not pnt.x <= self.width-1:
 			return False
-		if not pnt[1] <= self.height-1:
+		if not pnt.y <= self.height-1:
 			return False
 		return True
 
@@ -68,7 +74,7 @@ class Frame():
 	def setPixel(self,pnt,color,merge = False,offset = -1):
 		if not self.isPixel(pnt):
 			return 0
-		if not Core.isColor(color):
+		if not Frame.isColor(color):
 			return 0
 
 		if offset != -1:
@@ -76,7 +82,7 @@ class Frame():
 			if not self.PixelCount < Ioffset:
 				return 0
 		else:
-			if not pnt[0] >= 0 or not pnt[1] >= 0:return 0;
+			if not pnt.x >= 0 or not pnt.y >= 0:return 0;
 			Ioffset = self.getOffset(pnt);
 
 		if (self.R[Ioffset] != 0 or self.G[Ioffset] != 0 or self.B[Ioffset] != 0) and merge == True:

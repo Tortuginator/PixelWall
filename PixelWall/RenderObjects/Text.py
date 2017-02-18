@@ -1,14 +1,16 @@
 from __init__ import FrameFunction
-
+import Exceptions,Core
 class Text(FrameFunction):
-	def __init__(self,positionY,text,color):
+	def __init__(self,position,text,color):
+		if not isinstance(position,Core.point):
+		s	raise Exceptions.unexpectedType(type = "Core.Point",variable = "position")
 		self.text = text
 		self.color = color
-		self.positionY = positionY
+		self.position = position
 
 	def Render(self,dFrame):
 		if not Frame.isColor(self.color):return 0;
-		if not self.isPixel(self.position[0],self.position[1]):return 0;
+		if not self.isPixel(self.position.x,self.position.y):return 0;
 		spaces = {"!":1,"|":1,":":1,".":1}
 		chars = {	"0":[(0,0),(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(1,5),(0,5),(0,4),(0,3),(0,2),(0,1),(1,0)],
 					"1":[(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(1,4),(0,3)],
@@ -38,7 +40,7 @@ class Text(FrameFunction):
 		for i in text:
 			if i in chars:
 				for p in chars[i]:
-					self.setPixel(pos+p[0],self.positionY-p[1],color,ignore = True)
+					self.setPixel(pos+p[0],self.position.y-p[1],color,ignore = True)
 			if i in spaces:
 				pos +=1+spaces[i]
 			else:

@@ -1,5 +1,6 @@
 import serial,Core,Compression
 from threading import Thread
+import Frame,Exceptions
 
 class Output():
 	def __init__(self):
@@ -28,15 +29,18 @@ class BinaryFile(Output):
 		self.filepath = path
 
 	def __prepareData(self, data):
-		return Compression.toTransportfromRaw(Compression.toLinearfromRaw(data))
+		if not isinstance(data,Frame.Frame):
+			raise Exceptions.unexpectedType(variable = "data",type="Frame.Frame")
+			return False
+		return Compression.toTransportfromLinear(Compression.toLinearfromRaw(data.getColorArr()))
 
 	def output(self,data):
-		print "saving"
 		data = self.__prepareData(data);
-		print "Datalength:", len(data)
+		if data is None:
+			print "[!][PixelWall/Output/BinaryFile][output] Something went wrong."
+			return False
 		with open(self.filepath + self.filename, "wb") as f:
 			f.write(data)
-		print "complete"
 
 class TCPClient(Output):
 	def __init__(self,ip,port,connectOnInit = True):
@@ -51,16 +55,17 @@ class TCPClient(Output):
 
 	def __connect(self,force = False):
 		if (self.failcounter >= self.failmax) and not force:
-			raise failedToReconnect;
+			raise Exceptions.failedToReconnect;
 		try:
-			Core.UtilPrint.compose("+",self.__class__,__name__,"Connecting ",repr(self.ip),"@",repr(self.port))
+			print "[+][PixelWall/Output/TCPClient][__connect] Connecting",repr(self.ip),"@",repr(self.port)
+
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.socket.connect((self.ip, self.port))
 			self.failcounter = 0
 		except Exception,e :
 			self.failcounter += 1
 			self.__connect()
-			Core.UtilPrint.compose("+",self.__class__,__name__,"Socket excption, trying to reconnect: ", repr(e))
+			print "[!][PixelWall/Output/TCPClient][__connect] Socket excption, trying to reconnect:", repr(e)
 
 	def reconnect(self,force = False):
 		self.__connect(force);
@@ -70,16 +75,25 @@ class TCPClient(Output):
 		return True
 
 	def __prepareData(self,data):
-		return Compression.toTransportfromLinear(Compression.toLinearfromRaw(data))
+		if not isinstance(data,Frame.Frame):
+			print "[!][PixelWall/Output/TCPClient][__prepareData] wrong type. Excepting:",repr(Frame.Frame)
+			return False
+		return Compression.toTransportfromLinear(Compression.toLinearfromRaw(data.getColorArr()))
 
 	def output(self,data):
-		data = self.__prepareData(data)
+		data = self.__prepareData(data);
+		if data is None:
+			print "[!][PixelWall/Output/TCPClient][output] Something went wrong."
+			return False
+		if data is False:
+			return False
+
 		if socket == None:
 			raise socketNotInitialized;
 		try:
 			self.socket.send(data)
 		except socket.timeout:
-			Core.UtilPrint.compose("!",self.__class__,__name__,"Socket timeout",repr(self.ip),"@",repr(self.port))
+			print "[!][PixelWall/Output/TCPClient][output] Socket timeout",repr(self.ip),"@",repr(self.port)
 			self.reconnect();
 		#Connect
 	def close(self):

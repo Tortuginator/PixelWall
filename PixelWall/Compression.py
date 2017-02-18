@@ -1,5 +1,5 @@
 import Core
-@staticmethod
+
 def toLinearfromRaw(data):
     indicator = 1;replacement = 2;new = [[],[],[]];
     for channel in range(0,len(data)):
@@ -55,7 +55,6 @@ def toLinearfromRaw(data):
 
     return new
 
-@staticmethod
 def toRawfromLinear(data):
     indicator = 1;
     new = [[],[],[]]
@@ -79,7 +78,6 @@ def toRawfromLinear(data):
                 new[cnt].append(i[x])
     return new
 
-@staticmethod
 def toLinearfromTransport(data):
     data = bytearray(data);
     Ldat = len(data);
@@ -100,7 +98,7 @@ def toLinearfromTransport(data):
     newdata[2] = data[totalLengthG+7+totalLengthR+1:totalLengthG+7+totalLengthR+totalLengthB]
     return newdata
 
-@staticmethod
+
 def toTransportfromLinear(data):
     lenR = len(data[0])
     lenG = len(data[1])

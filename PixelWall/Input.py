@@ -1,7 +1,7 @@
 import socket,sys
 import time,datetime,serial
 from threading import Thread
-import Core, Compression
+import Core, Compression,Frame
 
 class Input():
     def __init__(self):
@@ -13,7 +13,7 @@ class Input():
     def updateSinceLastCall(self):
     	raise NotImplementedError;
 
-    def setArgs(self):
+    def setArgs(self,data):
     	pass #only used sometimes
 
 class PyGame(Input):
@@ -27,19 +27,23 @@ class PyGame(Input):
 		raise NotImplementedError
 
 class Function(Input):
-	def __init__(self,function):
-		self.function = function
-		self.args = None
+    def __init__(self,function):
+        self.function = function
+        self.args = None
 
-	def callData(self):
-		X = self.function(self.args);
-		return X
+    def callData(self):
+        X = self.function(self.args);
+        if not isinstance(X,Frame.Frame):
+            print "[!][PixelWall\Input\Function][callData] please return a",repr(Frame.Frame), "from the function."
+            return False
+        return X
 
-	def updateSinceLastCall(self):
-		return True;
+    def updateSinceLastCall(self):
+        return True;
 		#Allways true, because it should be called each time when it gets called from the engine
-	def setArgs(self,args):
-		self.args = args
+
+    def setArgs(self,args):
+        self.args = args
 
 class TCPServer(Input):
     def __init__(self,ip = '',port = 4000):
@@ -62,12 +66,12 @@ class TCPServer(Input):
 
 	def __fireUp(self):
 		self.failcounter += 1
-		Core.UtilPrint.compose("+",self.__class__,__name__,"Starting...")
+		print "[+][PixelWall\Input\TCPServer][__fireUp] Starting..."
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.socket.bind((self.ip,self.port))
 		self.instance = Thread(target = TCPServer.__srvThread, args = (self, ))
 		self.instance.start()
-		Core.UtilPrint.compose("+",self.__class__,__name__,"Started")
+		print "[+][PixelWall\Input\TCPServer][__fireUp] Started"
 
 	@staticmethod
 	def __srvThread(self):
@@ -76,16 +80,16 @@ class TCPServer(Input):
 			connection, client_address = self.socket.accept()
 			self.failcounter = 0;
 			try:
-				Core.UtilPrint.compose("+",self.__class__,__name__,"Client connected " + repr(client_address))
+				print "[+][PixelWall\Input\TCPServer][__srvThread] Client connected " + repr(client_address)
 				while True:
 					data = connection.recv(self.buffer)
 					if len(data) == 0: break
 					self.__updateIncoming(data);
 					#connection.sendall(data)
-				Core.UtilPrint.compose("+",self.__class__,__name__,"Client disconnected " + repr(client_address))
+				print "[+][PixelWall\Input\TCPServer][__srvThread] Client disconnected " + repr(client_address)
 			finally:
 				connection.close()
-				Core.UtilPrint.compose("+",self.__class__,__name__,"Client disconnected "+ repr(client_address))
+				print "[+][PixelWall\Input\TCPServer][__srvThread] (FORCED) Client disconnected "+ repr(client_address)
 
 	def __verify(self,data):
 		return Compression.toRawfromLinear(Compression.toLinearfromTransport(data))

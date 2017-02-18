@@ -1,5 +1,5 @@
 from __init__ import FrameFunction
-
+import Core,Exceptions
 class Circle(FrameFunction):
 	def __init__(self,centerPoint,color,radius,fill = False,fillcolor = 0,opacity = 1):
 		self.centerPoint = centerPoint
@@ -8,10 +8,12 @@ class Circle(FrameFunction):
 		self.fill = fill
 		self.fillcolor = fillcolor
 		self.opacity = opacity
+		if not isinstance(centerPoint,Core.Point):
+			raise Exceptions.unexpectedType(variable = "centerPoint",type="Core.Point")
 
 	def Render(self,dFrame):
-		x0 = self.centerPoint[0]
-		y0 = self.centerPoint[1]
+		x0 = self.centerPoint.x
+		y0 = self.centerPoint.y
 		if dFrame.isColor(self.color) is False:return 0;
 		colour = Frame.isColor(self.color);
 		#if Frame.isColor(fillColor) is False:return 0;
@@ -44,6 +46,3 @@ class Circle(FrameFunction):
 			self.setPixel((x0 - y, y0 + x), colour,merge = True,ignore = True)
 			self.setPixel((x0 + y, y0 - x), colour,merge = True,ignore = True)
 			self.setPixel((x0 - y, y0 - x), colour,merge = True,ignore = True)
-
-	def Object(self):
-		return (self,centerPoint,color,radius)

@@ -59,7 +59,6 @@ class PrintRegister():
 		#reset
 		self.register = []
 
-
 	def doPrint(self,out):
 		if not self.instance.isAlive:
 			self.__fireUp();
