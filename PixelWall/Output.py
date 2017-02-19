@@ -1,6 +1,8 @@
-import serial,Core,Compression
+import serial,sys
+sys.path.append('.\PixelWall')
+from PixelWall import Core,Exceptions,Compression
 from threading import Thread
-import Frame,Exceptions
+import RFCA as RFCA
 
 class Output():
 	def __init__(self):
@@ -10,18 +12,51 @@ class Output():
 		raise NotImplementedError;
 
 class Serial(Output):
-	def __init__(self,port = "COM3"):
+	def __init__(self,port = "COM3",compression = "RFCA"):
 		self.port = port
 		self.baudrate = 1000000
 		self.ser = None
+		self.initbyte = 200
+		if compression == "RFCA":
+			self.CompressionInstance = RFCA(LOD = 0);
 
 	def __fireUp(self):
 		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
 		self.ser.open()
 
+	def __prepareData(self,data):
+		#data needs to be in raw format
+		if not isinstance(data,Frame.Frame):
+			raise unexpectedType(variable = "data",type="Frame.Frame")
+		if self.compression == "RFCA":
+			tmp = data.getColorArr()
+			self.CompressionInstance.addFrame(tmp);
+			return bytearray(self.CompressionInstance.getByteCode())
+
+		elif self.compression == "RAW":
+			tmp = data.getColorArr()
+			return bytearray(tmp);
+
+		elif self.compression == "LINEAR":
+			tmp = data.getColorArr()
+			tmp = Compression.toLinearfromRaw(tmp)
+			return bytearray(tmp)
+
+		print "error compression not found"
+
+	def __correctFormat(self,data):
+		if self.compression == "LINEAR":
+			x = 2
+		elif self.compression == "RAW":
+			x = 1
+		elif self.compression == "RFCA":
+			x = 3
+		init = [self.initbyte,x,len(data)//255,len(data)%255]
+		return bytearray(init) + data
 	#ABSTRACT
 	def output(self,data):
-		self.ser.write(bytes(data))
+
+		self.ser.write(bytes(self.__correctFormat(self.__prepareData(data))))
 
 class BinaryFile(Output):
 	def __init__(self, filename = "output.bin", path = ""):

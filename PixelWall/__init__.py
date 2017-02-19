@@ -8,8 +8,8 @@ from Parallel import TimeManager
 import Core,Compression,Exceptions
 from PixelWall.RenderObjects import *
 import Exceptions as Exceptions
-
-__all__ = ["Parallel","Frame","Format","Output","Input","Core","Compression","Exceptions","RenderObjects"]
+import
+__all__ = ["RFCA","Parallel","Frame","Format","Output","Input","Core","Compression","Exceptions","RenderObjects"]
 
 class Engine():
     def __init__(self,height,width,Xinput,Xoutput):
