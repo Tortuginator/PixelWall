@@ -1,6 +1,9 @@
-import Core,Exceptions
+import sys
+sys.path.append('.\PixelWall')
+from PixelWall import Core,Exceptions
 class Frame():
 	def __init__(self,height,width):
+		self.framenumber = 0
 		self.height = height;
 		self.width = width;
 		self.PixelCount = height*width
@@ -35,7 +38,7 @@ class Frame():
 			if self.B[i] < 0:
 				self.B[i] = 0
 
-	def AddObject(self,obj):
+	def addObject(self,obj):
 		self.object.append(obj);
 
 	def getObjects(self):
@@ -48,7 +51,7 @@ class Frame():
 		return self.getPixel(pnt,True);
 
 	def getOffset(self,pnt):
-		if not isinstance(pnt,Core.point):
+		if not isinstance(pnt,Core.Point):
 			raise Exceptions.unexpectedType(variable = "pnt",type="Core.Point")
 
 		return (pnt.x*self.width)+pnt.y;
@@ -60,7 +63,7 @@ class Frame():
 		return [self.R[Ioffset],self.G[Ioffset],self.B[Ioffset]];
 
 	def isPixel(self,pnt):
-		if not isinstance(pnt,Core.point):
+		if not isinstance(pnt,Core.Point):
 			raise Exceptions.unexpectedType(variable = "pnt",type="Core.Point")
 		if not pnt.x <= self.width-1:
 			return False

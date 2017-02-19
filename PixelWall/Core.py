@@ -1,31 +1,10 @@
 import time
 from threading import Thread
 
-class Point():
+class Point(object):
 	def __init__(self,X,Y):
 		self.x = X
 		self.y = Y
-
-class Color():
-	def __init__(self,R,G,B):
-		self.r = R
-		self.g = G
-		self.b = B
-
-	def isColor(self):
-		if not 0 <= self.r <= 255:
-			return False
-		if not 0 <= self.g <= 255:
-			return False
-		if not 0 <= self.b <= 255:
-			return False
-		return True
-
-	def get(self):
-		return (self.r,self.g,self.b)
-
-	def mix(self,colorB):
-		raise NotImplementedError
 
 class CompressionType():
 	No = 0

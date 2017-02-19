@@ -64,6 +64,3 @@ class TimeManager():
 							print repr(e)
 		except Exception,e:
 			print e
-
-		def __tmeExec(self,function,args):
-			pass

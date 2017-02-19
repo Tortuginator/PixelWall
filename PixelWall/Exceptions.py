@@ -1,7 +1,6 @@
 class unexpectedType(Exception):
-	def __init__(self, types = None,variable = None):
+	def __init__(self,variable,type=None):
 		self.variable = variable
-        self.types = types
-
+		self.type = type
 	def __str__(self):
-		return "[!]Expecting type"+repr(self.types) ,"for:",repr(self.variable)
+		return "[!]Expecting type: " + repr(self.type) + " for " + self.variable

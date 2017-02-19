@@ -1,9 +1,11 @@
 from __init__ import FrameFunction
-import Exceptions,Core
+import sys
+sys.path.append('.\PixelWall')
+from PixelWall import Core,Exceptions
 class Text(FrameFunction):
 	def __init__(self,position,text,color):
-		if not isinstance(position,Core.point):
-		s	raise Exceptions.unexpectedType(type = "Core.Point",variable = "position")
+		if not isinstance(position,Core.Point):
+			raise Exceptions.unexpectedType(type = "Core.Point",variable = "position")
 		self.text = text
 		self.color = color
 		self.position = position

@@ -36,6 +36,7 @@ class BinaryFile(Output):
 
 	def output(self,data):
 		data = self.__prepareData(data);
+		print data
 		if data is None:
 			print "[!][PixelWall/Output/BinaryFile][output] Something went wrong."
 			return False

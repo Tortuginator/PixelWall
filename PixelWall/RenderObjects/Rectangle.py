@@ -1,5 +1,8 @@
 from __init__ import FrameFunction
-import Core,Exceptions
+import sys
+sys.path.append('.\PixelWall')
+from PixelWall import Core,Exceptions,Frame
+
 class Rectangle(FrameFunction):
 	def __init__(self,startPoint,endPoint,color,opacity):
 		if not isinstance(startPoint,Core.Point):
@@ -26,8 +29,8 @@ class Rectangle(FrameFunction):
 			Xoffset -= 1;
 
 		for p in range(0,Yoffset):
-			if not dFrame.isPixel(self.startPoint.x,self.startPoint.y+p):continue;
-			Ioffset = dFrame.getOffset(self.startPoint.x,self.startPoint.y+p)
+			if not dFrame.isPixel(Core.Point(self.startPoint.x,self.startPoint.y+p)):continue;
+			Ioffset = dFrame.getOffset(Core.Point(self.startPoint.x,self.startPoint.y+p))
 			for i in range(0,Xoffset):
 				dFrame.R[Ioffset+i] = int(self.color[0]*self.opacity)
 				dFrame.G[Ioffset+i] = int(self.color[1]*self.opacity)

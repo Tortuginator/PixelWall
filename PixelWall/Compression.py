@@ -52,7 +52,6 @@ def toLinearfromRaw(data):
                 new[channel].append(replacement)
             else:
                 new[channel].append(lastPoint)
-
     return new
 
 def toRawfromLinear(data):

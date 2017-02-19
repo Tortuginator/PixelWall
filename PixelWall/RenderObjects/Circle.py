@@ -1,5 +1,7 @@
 from __init__ import FrameFunction
-import Core,Exceptions
+import sys
+sys.path.append('.\PixelWall')
+from PixelWall import Core,Exceptions,Frame
 class Circle(FrameFunction):
 	def __init__(self,centerPoint,color,radius,fill = False,fillcolor = 0,opacity = 1):
 		self.centerPoint = centerPoint
@@ -14,7 +16,7 @@ class Circle(FrameFunction):
 	def Render(self,dFrame):
 		x0 = self.centerPoint.x
 		y0 = self.centerPoint.y
-		if dFrame.isColor(self.color) is False:return 0;
+		if Frame.isColor(self.color) is False:return 0;
 		colour = Frame.isColor(self.color);
 		#if Frame.isColor(fillColor) is False:return 0;
 		if self.radius <= 0:	return 0;
@@ -26,10 +28,10 @@ class Circle(FrameFunction):
 		ddf_y = -2 * self.radius
 		x = 0
 		y = self.radius
-		self.setPixel((x0, y0 + self.radius), colour,merge = True,ignore = True)
-		self.setPixel((x0, y0 - self.radius), colour,merge = True,ignore = True)
-		self.setPixel((x0 + self.radius, y0), colour,merge = True,ignore = True)
-		self.setPixel((x0 - self.radius, y0), colour,merge = True,ignore = True)
+		dFrame.setPixel(Core.Point(x0, y0 + self.radius), colour,merge = True)
+		dFrame.setPixel(Core.Point(x0, y0 - self.radius), colour,merge = True)
+		dFrame.setPixel(Core.Point(x0 + self.radius, y0), colour,merge = True)
+		dFrame.setPixel(Core.Point(x0 - self.radius, y0), colour,merge = True)
 		while x < y:
 			if f >= 0:
 				y -= 1
@@ -38,11 +40,11 @@ class Circle(FrameFunction):
 			x += 1
 			ddf_x += 2
 			f += ddf_x
-			self.setPixel((x0 + x, y0 + y), colour,merge = True,ignore = True)
-			self.setPixel((x0 - x, y0 + y), colour,merge = True,ignore = True)
-			self.setPixel((x0 + x, y0 - y), colour,merge = True,ignore = True)
-			self.setPixel((x0 - x, y0 - y), colour,merge = True,ignore = True)
-			self.setPixel((x0 + y, y0 + x), colour,merge = True,ignore = True)
-			self.setPixel((x0 - y, y0 + x), colour,merge = True,ignore = True)
-			self.setPixel((x0 + y, y0 - x), colour,merge = True,ignore = True)
-			self.setPixel((x0 - y, y0 - x), colour,merge = True,ignore = True)
+			dFrame.setPixel(Core.Point(x0 + x, y0 + y), colour,merge = True)
+			dFrame.setPixel(Core.Point(x0 - x, y0 + y), colour,merge = True)
+			dFrame.setPixel(Core.Point(x0 + x, y0 - y), colour,merge = True)
+			dFrame.setPixel(Core.Point(x0 - x, y0 - y), colour,merge = True)
+			dFrame.setPixel(Core.Point(x0 + y, y0 + x), colour,merge = True)
+			dFrame.setPixel(Core.Point(x0 - y, y0 + x), colour,merge = True)
+			dFrame.setPixel(Core.Point(x0 + y, y0 - x), colour,merge = True)
+			dFrame.setPixel(Core.Point(x0 - y, y0 - x), colour,merge = True)
