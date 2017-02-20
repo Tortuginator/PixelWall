@@ -31,7 +31,7 @@ class TimeTrigger():
 
 class TimeManager():
 	def __init__(self):
-		self.baseFrequency = 120
+		self.baseFrequency = 60
 		self.instance = None
 		self.triggers = []
 
@@ -46,11 +46,10 @@ class TimeManager():
 	def __tmeThread(self):
 		try:
 			innerStep = 0
-			innerMicrosecondDelta = (int(float(1)/float(self.baseFrequency))*100000)
+			innerMicrosecondDelta = (float(1)/float(self.baseFrequency))
+			print innerMicrosecondDelta
 			while(True):
-				if innerStep*innerMicrosecondDelta > Core.current_milli_time():
-					time.sleep(0.001)
-					continue
+				time.sleep(innerMicrosecondDelta)
 				if innerStep >= self.baseFrequency-1:
 					innerStep = 0
 					innerTiming = datetime.datetime.now()

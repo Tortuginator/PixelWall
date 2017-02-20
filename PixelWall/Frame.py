@@ -13,9 +13,6 @@ class Frame():
 		self.B = [0 for i in range(0,self.PixelCount)]
 		self.object = []
 
-	#def __str__(self):
-		#return str(self.R,self.G,self.B)
-
 	def __add__(self,other):
 		if not self.PixelCount == other.PixelCount:
 			return #EXCEPTION

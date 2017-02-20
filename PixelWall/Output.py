@@ -1,8 +1,8 @@
 import serial,sys
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Exceptions,Compression
+from PixelWall import Core,Exceptions,Compression,Frame
 from threading import Thread
-import RFCA as RFCA
+import RFCA
 
 class Output():
 	def __init__(self):
@@ -17,12 +17,14 @@ class Serial(Output):
 		self.baudrate = 1000000
 		self.ser = None
 		self.initbyte = 200
+		self.compression = compression
 		if compression == "RFCA":
-			self.CompressionInstance = RFCA(LOD = 0);
+			self.CompressionInstance = RFCA.RFCA(LOD = 10);
 
 	def __fireUp(self):
-		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
-		self.ser.open()
+		#self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
+		#self.ser.open()
+		pass
 
 	def __prepareData(self,data):
 		#data needs to be in raw format
@@ -40,7 +42,7 @@ class Serial(Output):
 		elif self.compression == "LINEAR":
 			tmp = data.getColorArr()
 			tmp = Compression.toLinearfromRaw(tmp)
-			return bytearray(tmp)
+			return bytearray([item for sublist in tmp for item in sublist])
 
 		print "error compression not found"
 
@@ -55,8 +57,8 @@ class Serial(Output):
 		return bytearray(init) + data
 	#ABSTRACT
 	def output(self,data):
-
-		self.ser.write(bytes(self.__correctFormat(self.__prepareData(data))))
+		print "[+] Serial Transmission length",len(self.__correctFormat(self.__prepareData(data))),"bytes"
+		#self.ser.write(bytes(self.__correctFormat(self.__prepareData(data))))
 
 class BinaryFile(Output):
 	def __init__(self, filename = "output.bin", path = ""):

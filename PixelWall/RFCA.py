@@ -51,16 +51,21 @@ class RFCA():
                         compact[channel].append(self.__allowedSymbol(difference[channel][p]))
                     elif skipped <= 3:
                         for i in range(0,skipped+1):
-                            compact[channel].append(self.__allowedSymbol(newframe[channel][p-1-skipped+i]))
+                            compact[channel].append(self.__allowedSymbol(newFrame[channel][p-1-skipped+i]))
                         compact[channel].append(self.__allowedSymbol(difference[channel][p]))
                     else:
+                        for r in range(0,(skipped-3)//255):
+                            compact[channel].append(1)
+                            compact[channel].append(255)
                         compact[channel].append(1)
-                        compact[channel].append(skipped-3)
+                        compact[channel].append((skipped-3)%255)
                         compact[channel].append(self.__allowedSymbol(difference[channel][p]))
-
                         skipped = 0
+            for r in range(0,(skipped-3)//255):
+                compact[channel].append(1)
+                compact[channel].append(255)
             compact[channel].append(1)
-            compact[channel].append(skipped-3)
+            compact[channel].append((skipped-3)%255)
             skipped = 0
         #Compression
         self.frame = newFrame
@@ -74,11 +79,3 @@ class RFCA():
         if i == 3:
             return 4
         return i
-
-
-"""if __name__ == "__main__":
-    testCTF = CompactTransportFormat();
-    testCTF.addFrame([[0,5,2,226,224,165,1,1,1,1,5,4],[0,5,2,226,224,165,1,1,1,1,5,4],[0,5,2,226,224,165,1,1,1,1,5,4]])
-    print testCTF.getByteCode()
-    testCTF.addFrame([[0,5,2,226,224,165,1,1,1,1,5,4],[0,5,2,226,224,165,1,1,1,1,5,4],[0,5,2,226,224,165,1,1,1,1,5,4]])
-    print testCTF.getByteCode()"""
