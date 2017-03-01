@@ -12,7 +12,7 @@ class Output():
 		raise NotImplementedError;
 
 class Serial(Output):
-	def __init__(self,port = "COM3",compression = "RFCA"):
+	def __init__(self,port = "/dev/tty",compression = "RFCA"):
 		self.port = port
 		self.baudrate = 1000000
 		self.ser = None
@@ -22,8 +22,8 @@ class Serial(Output):
 			self.CompressionInstance = RFCA.RFCA(LOD = 10);
 
 	def __fireUp(self):
-		#self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
-		#self.ser.open()
+		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
+		self.ser.open()
 		pass
 
 	def __prepareData(self,data):
