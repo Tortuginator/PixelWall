@@ -19,12 +19,12 @@ class Serial(Output):
 		self.initbyte = 200
 		self.compression = compression
 		if compression == "RFCA":
-			self.CompressionInstance = RFCA.RFCA(LOD = 10);
+			self.CompressionInstance = RFCA.RFCA(LOD = 1);
+		self.__fireUp();
 
 	def __fireUp(self):
 		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
-		self.ser.open()
-		pass
+		#self.ser.open()
 
 	def __prepareData(self,data):
 		#data needs to be in raw format
@@ -58,7 +58,7 @@ class Serial(Output):
 	#ABSTRACT
 	def output(self,data):
 		print "[+] Serial Transmission length",len(self.__correctFormat(self.__prepareData(data))),"bytes"
-		#self.ser.write(bytes(self.__correctFormat(self.__prepareData(data))))
+		self.ser.write(bytes(self.__correctFormat(self.__prepareData(data))))
 
 class BinaryFile(Output):
 	def __init__(self, filename = "output.bin", path = ""):
