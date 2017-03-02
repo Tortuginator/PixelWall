@@ -41,6 +41,7 @@ The engine offers 3 basic types of compression:
  * **LINEAR** a very basic compression. Allready reducing the size im comparison to the RAW compression by up to 50%
  * **RFCA** a more advanced compression, only sending the bytes of the frames which changed between the two frames. This reduces the size by up to 90% im comparison to RAW.
  * **RFCA2** [EXPERIMENTAL] based on the RFCA compression, it only needs 6-bit per color/pixel. Therefor it can display 24bit colors using only 18bit without any loss. In comparison to RFCA it uses about 20% less size.
+ * **OBJECT** [EXPERIMENTAL] this only transmits the objects it self, like Rectangles and Circles. So only the parameters like size,  radius, etc. need to be send. And it will then be rendered on the Clientside. But this requires exactly the same implementation of the objects on the Client and Serverside. And a Client which has the performace to do theese type of calculations near Realtime.
  
 booth **RFCA** and **RFCA2** are looseless per default, but they offer non-looseless compression, which can be activated.
 since the **LINEAR** compression allread offers a lot of compressen VS. computing performance it is used, when setting the Output to TCP or File.
@@ -48,4 +49,6 @@ since the **LINEAR** compression allread offers a lot of compressen VS. computin
 #Animation Engine
 This part of the PixelWall engine, can display bitmaps and is enables you to define animations, which can be dynamic, meaning they can change each iteration or static ones which stay the same throughout each loop. I addition it offeres "Halfframe" support, so that Animations running at low FPS look smoother and more refined.
 
+#Performace
+While testing, the Engine was running on a Microsoft surface Pro 4 with intel I7 and 16GB ram. For rendering complex animations at 60fps for a 30x30 pixelwall and sending them via serial, it only took 2% of the processor power.
 THIS PROGRAMM/SCRIPT IS OFFERED WITHOUT ANY WARRANTY OR WHAT SO EVER AND CAN NOT BE HELD LIABLE FOR ANY DAMAGES...
