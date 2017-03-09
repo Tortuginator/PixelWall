@@ -38,7 +38,7 @@ class Serial(Output):
 
 		elif self.compression == "RAW":
 			tmp = data.getColorArr()
-			return bytearray(tmp);
+			return bytearray([item for sublist in tmp for item in sublist]);
 
 		elif self.compression == "LINEAR":
 			tmp = data.getColorArr()

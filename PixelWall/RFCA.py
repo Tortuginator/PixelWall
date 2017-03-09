@@ -19,6 +19,52 @@ class RFCA():
             return 0
         self.LOD = LOD
 
+    def addFrame2(self,newFrame):
+        difference = [[],[],[]]
+        if self.initNewFrame() is True:
+            return
+
+        for channel in range(0,len(self.frame)):
+            for p in range(0,len(self.frame[channel])):
+                lastP = -1
+                if abs(self.__allowedSymbol(newFrame[channel][p]) - self.frame[channel][p]) <= self.LOD:
+                    #no difference
+                    pass
+                else:
+                    if lastP == p-1:
+                        difference[channel].append(self.__allowedSymbol(newFrame[channel][p]))
+                        lastP = p
+                    else:
+                        skipped = p - (lastP+1)
+                        if skipped <= 2:
+                            for r in range(lastP+1,p):
+                                difference[channel].append(self.__allowedSymbol(newFrame[channel][r]))
+                        else if skipped > 255:
+                            for r in range(0,skipped//255):
+                                difference[channel].append(1)
+                                difference[channel].append(255)
+                            difference[channel].append(1)
+                            difference[channel].append(skipped%255)
+                        else:
+                            difference[channel].append(1)
+                            difference[channel].append(skipped)
+                        difference[channel].append(self.__allowedSymbol(newFrame[channel][p]))
+        self.frame = newFrame
+        self.counter +=1
+        self.last = compact
+    def initNewFrame(self,newFrame):
+        if self.frame == None:
+            self.frame = [[],[],[]]
+            for channel in range(0,len(newFrame)):
+                for p in range(0,len(newFrame[channel])):
+                    self.frame[channel].append(self.__allowedSymbol(newFrame[channel][p]))
+            self.last = self.frame
+            self.counter = 1
+            self.frame = newFrame
+            return True
+        else:
+            return False
+
     def addFrame(self,newFrame):
         difference = [[],[],[]]
         difference[0] = [(-1) for i in range(0,len(newFrame[0]))]
