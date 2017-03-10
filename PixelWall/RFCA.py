@@ -9,7 +9,7 @@ class RFCA():
 
     def getByteCode(self):
         #Type,SubframeType,Framenumber
-        initSeq = [3,0,self.counter%255,len(self.last[0])//255,len(self.last[0])%255,len(self.last[1])//255,len(self.last[1])%255,len(self.last[2])//255,len(self.last[2])%255]
+        initSeq = [3,self.counter%255,len(self.last[0])//255,len(self.last[0])%255,len(self.last[1])//255,len(self.last[1])%255,len(self.last[2])//255,len(self.last[2])%255]
         return initSeq + self.last[0] + self.last[1] + self.last[2]
         return bytearray(initSeq) + bytearray(self.last[0]) + bytearray(self.last[1]) + bytearray(self.last[2])
 

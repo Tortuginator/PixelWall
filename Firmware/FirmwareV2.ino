@@ -10,6 +10,7 @@ const int Hlength = 28; // The Horizontal amount of LED's
 const int Hbegin = 1;//where the initial strip beginns: Left -> 0, Right -> 1
 const int VrowsperStrip = 4; // How many rows are there per strip
 
+const bool Debug = true;
 //Static Configuration
 const int ledsPerStrip = Hlength * VrowsperStrip; //total 28*28// 7 strips
 DMAMEM int displayMemory[ledsPerStrip * 6];
@@ -26,72 +27,83 @@ void setup() {
 }
 
 //DecompressionConfiguration
-byte incomingFrameSequence = 200;
+byte incomingSequenceFlag = 200;
 
-//Static Configuration/Init
-short currentmode = 0;//0 - Waiting for first seqbyte, 1 - Waiting for first lengthbyte, 2 - Waiting for second lengthbyte, 3 - Waiting for modebyte, 4 - Receiving Frame
-short transmissionLength[2];
-int frameLength;
-int currentFrameLength = 0;
-short frameType;
-byte * frame;
-int typethreecounter = 0;
-
-void loop() {
-  byte incomingByte;
-  if (Serial.available() > 0) {
-    incomingByte = Serial.read();
-    if (currentmode == 0 and incomingFrameSequence == incomingByte) {
-      Serial.println("rcvnew");
-      currentmode = 1;
-    } else if (currentmode == 1) {
-      transmissionLength[0] = incomingByte;
-      currentmode = 2;
-    } else if (currentmode == 2) {
-      transmissionLength[1] = incomingByte;
-      frameLength = (transmissionLength[0] * 255) + transmissionLength[1];
-      Serial.println("rcvlen" + String(frameLength));
-      currentFrameLength = 0;
-      currentmode = 3;
-
-    } else if (currentmode == 3) {
-      frameType = incomingByte;
-      currentmode = 4;
-      Serial.println("rcvtype" + String(frameType));
-
-    } else if (currentmode == 4) {
-      if (currentFrameLength <= (frameLength - 1)) {
-        if (frameType == 0) {
-          if (currentFrameLength == 0) {
-            free(frame);
-            frame = (byte*) calloc(frameLength, sizeof (byte));
+void loop(){
+	byte * buffer;
+	int bufferLength = 0;
+	int bufferPosition = 0;
+	int bufferLengthSTOR; //for the temporary calculation of the buffer length
+	//frame configuration
+	short frameType = 0;
+	short currentFlag = 0;
+	
+	byte incomingByte;
+	while (1==1){
+		if (Serial.available() > 0) {
+			incomingByte = Serial.read();
+		}else{
+			break;//skip iteration
+		}
+		
+		if (currentFlag == 0 and incomingSequenceFlag == incomingByte){
+			if (Debug == true){Serial.println("rcvnew");}
+			currentFlag = 1;
+			
+		}else if (currentFlag == 1){
+			bufferLengthBytesSTOR = incomingByte;
+			currentFlag = 2;
+			
+		}else if(currentFlag == 2){
+			bufferLength = (bufferLengthBytesSTOR * 255) + incomingByte;
+			if (Debug == true){Serial.println("rcvlen" + String(bufferLength));}
+			bufferPosition = 0;
+			currentFlag = 3;
+			
+		}else if (currentFlag == 3){
+			frameType = incomingByte;
+			currentFlag = 4;
+			
+		}else if (currentFlag == 4){
+			if (bufferPosition == 0) {
+				free(buffer);
+				buffer = (byte*) calloc(bufferLength, sizeof (byte));
+			}
+			buffer[bufferPosition] = incomingByte;
+			bufferPosition +=1;
+			
+			if (bufferPosition == bufferLength){
+				drawFrameFromBuffer(buffer,frameType);
+				currentFlag = 0;
+			}
           }
-          frame[currentFrameLength] = incomingByte;
-        }
-        currentFrameLength = currentFrameLength + 1;
-        if (currentFrameLength >= frameLength){
-          renderTypeZero();
-          currentmode = 0;
-        }
-      }
-    }
-  }
+		}
+	}
 }
-void renderTypeThree(){//RFCA compression V1.0
+
+void drawFrameFromBuffer(byte buffer[],short frameType){
+	if (frameType == 0){
+		renderTypeZero(buffer);
+	}else if(frameType == 3){
+		renderTypeThree(buffer);
+	}
+}
+
+
+void renderTypeThree(byte buffer[]){//RFCA compression V1.0
   char SkipSignal = 0;
-  if lengthRGB[0]
   int lengthRGB[3];
-  lengthRGB[0] = frame[1] * 255 + frame[2];
-  lengthRGB[1] = frame[3] * 255 + frame[4];
-  lengthRGB[2] = frame[5] * 255 + frame[6];
+  lengthRGB[0] = buffer[1] * 255 + buffer[2];
+  lengthRGB[1] = buffer[3] * 255 + buffer[4];
+  lengthRGB[2] = buffer[5] * 255 + buffer[6];
 
   int counter = 7;
   for (int p = 0; i < 3;p++){
     int locmax = lengthRGB[p] + counter;
     int index = 0;
     while (index <= locmax){
-      if (frame[counter] == SkipSignal){
-        index += frame[counter+1];
+      if (buffer[counter] == SkipSignal){
+        index += buffer[counter+1];
         counter +=2;
       }else{
         short pixelpos = nbrPixelbyPosition(index);
@@ -108,7 +120,7 @@ void renderTypeThree(){//RFCA compression V1.0
   }
   leds.show();
 }
-void renderTypeZero() {
+void renderTypeZero(byte buffer[]) {
   int allpixels = leds.numPixels();
   if (frameLength % 3 == 0) {
     int innerLength = frameLength / 3;
