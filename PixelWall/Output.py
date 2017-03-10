@@ -15,12 +15,12 @@ class Output():
 class Serial(Output):
 	def __init__(self,port = "COM3",compression = "RFCA"):
 		self.port = port
-		self.baudrate = 1000000
+		self.baudrate = 100000
 		self.ser = None
 		self.initbyte = 200
 		self.compression = compression
 		if compression == "RFCA":
-			self.CompressionInstance = RFCA.RFCA(LOD = 10);
+			self.CompressionInstance = RFCA.RFCA(LOD = 0);
 
 	def __fireUp(self):
 		#self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
