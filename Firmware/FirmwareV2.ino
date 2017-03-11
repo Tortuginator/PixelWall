@@ -27,7 +27,7 @@ void setup() {
 }
 
 //DecompressionConfiguration
-byte incomingSequenceFlag = 200;
+const byte incomingSequenceFlag = 200; // or char
 
 void loop(){
 	byte * buffer;
@@ -37,7 +37,7 @@ void loop(){
 	//frame configuration
 	short frameType = 0;
 	short currentFlag = 0;
-	
+
 	byte incomingByte;
 	while (1==1){
 		if (Serial.available() > 0) {
@@ -45,25 +45,25 @@ void loop(){
 		}else{
 			break;//skip iteration
 		}
-		
+
 		if (currentFlag == 0 and incomingSequenceFlag == incomingByte){
 			if (Debug == true){Serial.println("rcvnew");}
 			currentFlag = 1;
-			
+
 		}else if (currentFlag == 1){
 			bufferLengthBytesSTOR = incomingByte;
 			currentFlag = 2;
-			
+
 		}else if(currentFlag == 2){
 			bufferLength = (bufferLengthBytesSTOR * 255) + incomingByte;
 			if (Debug == true){Serial.println("rcvlen" + String(bufferLength));}
 			bufferPosition = 0;
 			currentFlag = 3;
-			
+
 		}else if (currentFlag == 3){
 			frameType = incomingByte;
 			currentFlag = 4;
-			
+
 		}else if (currentFlag == 4){
 			if (bufferPosition == 0) {
 				free(buffer);
@@ -71,13 +71,12 @@ void loop(){
 			}
 			buffer[bufferPosition] = incomingByte;
 			bufferPosition +=1;
-			
+
 			if (bufferPosition == bufferLength){
 				drawFrameFromBuffer(buffer,frameType);
 				currentFlag = 0;
 			}
-          }
-		}
+    }
 	}
 }
 
@@ -86,32 +85,42 @@ void drawFrameFromBuffer(byte buffer[],short frameType){
 		renderTypeZero(buffer);
 	}else if(frameType == 3){
 		renderTypeThree(buffer);
-	}
+	}else{
+    if (Debug == true){Serial.println("frtyNotFound");}
+  }
 }
 
 
-void renderTypeThree(byte buffer[]){//RFCA compression V1.0
+void renderTypeThree(byte buffer[]){//RFCA compression V1.0 -->THIS DOES NOT WORK FOR RFCA v2 [EXPERIMENTAL]<--
   char SkipSignal = 0;
   int lengthRGB[3];
   lengthRGB[0] = buffer[1] * 255 + buffer[2];
   lengthRGB[1] = buffer[3] * 255 + buffer[4];
   lengthRGB[2] = buffer[5] * 255 + buffer[6];
 
-  int counter = 7;
-  for (int p = 0; i < 3;p++){
-    int locmax = lengthRGB[p] + counter;
-    int index = 0;
+  int index,locmax,counter;
+  long r,g,b,color,number;
+  short pixelpos;
+
+  counter = 7;
+
+  for (int p = 0; p < 3;p++){
+    locmax = lengthRGB[p] + counter;
+    index = 0;
     while (index <= locmax){
       if (buffer[counter] == SkipSignal){
-        index += buffer[counter+1];
-        counter +=2;
+        index += buffer[counter+1];//the index in the pixel array, meaning the position of the pixel. Therefore since it is the RFCA v1. this is not the same as the counter index!
+        counter +=2;//the index in the buffer array
       }else{
-        short pixelpos = nbrPixelbyPosition(index);
-        long number = leds.getPixel(pixelpos);
-        long r = number >> 16;
-        long g = number >> 8 & 0xFF;
-        long b = number & 0xFF;
-        long color = (r << 16) | (g << 8) | b;
+        pixelpos = nbrPixelbyPosition(index);
+        number = leds.getPixel(pixelpos);
+        r = number >> 16;
+        g = number >> 8 & 0xFF;
+        b = number & 0xFF;
+        if (p == 0){r = buffer[counter];}
+        if (p == 1){g = buffer[counter];}
+        if (p == 2){b = buffer[counter];}
+        color = (r << 16) | (g << 8) | b;
         leds.setPixel(pixelpos,color);
         index +=1;
         counter +=1;
@@ -122,22 +131,22 @@ void renderTypeThree(byte buffer[]){//RFCA compression V1.0
 }
 void renderTypeZero(byte buffer[]) {
   int allpixels = leds.numPixels();
-  if (frameLength % 3 == 0) {
-    int innerLength = frameLength / 3;
-    Serial.println("0rnd");
-    for (int i = 0; i < (frameLength / 3); i++) {
+  long color;
+  int pixelpos;
+  int innerLength = len(buffer);
+  if (innerLength % 3 == 0) {
+    if (Debug == true){Serial.println("0rnd");}
+    for (int i = 0; i < (innerLength/3); i++) {
       if (i < allpixels) {
-        long color = ((long)frame[i] << 16) | ((long)frame[i + innerLength] << 8) | (long)frame[i + innerLength*2];
-        //Serial.println("R:" + String(frame[i]) + " G:" + String(frame[i + innerLength]) + " B:" + String(frame[i + innerLength*2]));
-        //Serial.println(color, HEX);
-        leds.setPixel(i, color);
-        //setPixelbyPosition(i,color);
+        color = ((long)buffer[i] << 16) | ((long)buffer[i + innerLength] << 8) | (long)buffer[i + innerLength*2];
+        pixelpos = nbrPixelbyPosition(i);
+        leds.setPixel(pixelpos, color);
       }
     }
-    Serial.println("0rndshow");
+    if (Debug == true){Serial.println("0rndshow");}
     leds.show();
   }else{
-    Serial.println("0rndfaildivby3");
+    if (Debug == true){Serial.println("0rndfaildivby3");}
   }
   currentmode = 0;
 }
@@ -170,6 +179,5 @@ int nbrPixelbyCoordinate(int X,int Y){
     position += X;
   }
 
-  //setcolor
   return position;
 }
