@@ -61,6 +61,7 @@ class Engine():
                         print "[!] Render function was not found while rendering for",repr(i)
                     else:
                         i.Render(A)
+                    
                 A.object = []
             self.Xoutput.output(A)
             self.lastFrame = A

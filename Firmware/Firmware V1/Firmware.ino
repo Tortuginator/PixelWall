@@ -79,14 +79,13 @@ void loop() {
 }
 void renderTypeThree(){//RFCA compression V1.0
   char SkipSignal = 0;
-  if lengthRGB[0]
   int lengthRGB[3];
   lengthRGB[0] = frame[1] * 255 + frame[2];
   lengthRGB[1] = frame[3] * 255 + frame[4];
   lengthRGB[2] = frame[5] * 255 + frame[6];
 
   int counter = 7;
-  for (int p = 0; i < 3;p++){
+  for (int p = 0; p < 3;p++){
     int locmax = lengthRGB[p] + counter;
     int index = 0;
     while (index <= locmax){
@@ -134,7 +133,7 @@ void renderTypeZero() {
 int nbrPixelbyPosition(int position){
   int iY = position / Hlength;
   int iX = position % Hlength;
-  return setPixelbyCoordinate(iX,iY);
+  return nbrPixelbyCoordinate(iX,iY);
 }
 int nbrPixelbyCoordinate(int X,int Y){
   bool inverse = false;

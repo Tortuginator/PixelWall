@@ -14,7 +14,7 @@ def Circle2(AnimationInstance,iteration,opacity,dFrame):
     -Radius: [INT] The maximal circle radius
     """
 
-    Color = (100,200,100)
+    Color = (0,100,0)
     ColorGRAD = (0,255,0)
     Length = 5
     position = Core.Point(15,15)

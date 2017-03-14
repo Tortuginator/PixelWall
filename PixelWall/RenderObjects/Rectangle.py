@@ -36,5 +36,8 @@ class Rectangle(FrameFunction):
 				dFrame.G[Ioffset+i] = int(self.color[1]*self.opacity)
 				dFrame.B[Ioffset+i] = int(self.color[2]*self.opacity)
 
+		print "color",dFrame.R[10],dFrame.G[10]
+		return dFrame
+
 		def Object(self):
 			return (self.startPoint,self.endPoint,self.color,self.opacity)

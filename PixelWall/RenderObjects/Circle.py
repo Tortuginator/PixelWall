@@ -48,3 +48,4 @@ class Circle(FrameFunction):
 			dFrame.setPixel(Core.Point(x0 - y, y0 + x), colour,merge = True)
 			dFrame.setPixel(Core.Point(x0 + y, y0 - x), colour,merge = True)
 			dFrame.setPixel(Core.Point(x0 - y, y0 - x), colour,merge = True)
+		return dFrame

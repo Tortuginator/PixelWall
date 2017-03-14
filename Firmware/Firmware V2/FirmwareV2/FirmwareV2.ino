@@ -1,10 +1,7 @@
-#include <stdlib.h> // for malloc and free
 #include <OctoWS2811.h>
 
-
-
 //Configuration
-const int SerialBaudrate = 100000;
+const int SerialBaudrate = 1000000;
 const int Vlength = 28; // The vertival amount of lED's
 const int Hlength = 28; // The Horizontal amount of LED's
 const int Hbegin = 1;//where the initial strip beginns: Left -> 0, Right -> 1
@@ -17,27 +14,31 @@ DMAMEM int displayMemory[ledsPerStrip * 6];
 int drawingMemory[ledsPerStrip * 6];
 const int config = WS2811_GRB | WS2811_800kHz;
 OctoWS2811 leds(ledsPerStrip, displayMemory, drawingMemory, config);
+char buffer [Vlength*Hlength*3+20];
 
+unsigned int Color(byte r, byte g, byte b)
+{
+  return (((unsigned int)r << 16) | ((unsigned int)g << 8) | (unsigned int)g);
+}
 
 //Code
 void setup() {
-  Serial.begin(100000);
+  Serial.begin(1000000);
   leds.begin();
   leds.show();
 }
 
 //DecompressionConfiguration
 const byte incomingSequenceFlag = 200; // or char
-
 void loop(){
-	byte * buffer;
+  short inner = 0;
 	int bufferLength = 0;
 	int bufferPosition = 0;
 	int bufferLengthSTOR; //for the temporary calculation of the buffer length
 	//frame configuration
 	short frameType = 0;
-	short currentFlag = 0;
-
+  short currentFlag = 0;
+  
 	byte incomingByte;
 	while (1==1){
 		if (Serial.available() > 0) {
@@ -51,63 +52,51 @@ void loop(){
 			currentFlag = 1;
 
 		}else if (currentFlag == 1){
-			bufferLengthBytesSTOR = incomingByte;
+			bufferLengthSTOR = incomingByte;
 			currentFlag = 2;
 
 		}else if(currentFlag == 2){
-			bufferLength = (bufferLengthBytesSTOR * 255) + incomingByte;
+			bufferLength = (bufferLengthSTOR * 255) + incomingByte;
 			if (Debug == true){Serial.println("rcvlen" + String(bufferLength));}
 			bufferPosition = 0;
 			currentFlag = 3;
-
+      
 		}else if (currentFlag == 3){
 			frameType = incomingByte;
 			currentFlag = 4;
 
 		}else if (currentFlag == 4){
-			if (bufferPosition == 0) {
-				free(buffer);
-				buffer = (byte*) calloc(bufferLength, sizeof (byte));
-			}
 			buffer[bufferPosition] = incomingByte;
 			bufferPosition +=1;
-
 			if (bufferPosition == bufferLength){
-				drawFrameFromBuffer(buffer,frameType);
+				drawFrameFromBuffer(frameType,bufferLength);
 				currentFlag = 0;
 			}
     }
 	}
 }
 
-void drawFrameFromBuffer(byte buffer[],short frameType){
-	if (frameType == 0){
-		renderTypeZero(buffer);
-	}else if(frameType == 3){
-		renderTypeThree(buffer);
-	}else{
-    if (Debug == true){Serial.println("frtyNotFound");}
-  }
-}
 
-
-void renderTypeThree(byte buffer[]){//RFCA compression V1.0 -->THIS DOES NOT WORK FOR RFCA v2 [EXPERIMENTAL]<--
-  char SkipSignal = 0;
+void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT WORK FOR RFCA v2 [EXPERIMENTAL]<--
+  char SkipSignal = 1;
   int lengthRGB[3];
-  lengthRGB[0] = buffer[1] * 255 + buffer[2];
-  lengthRGB[1] = buffer[3] * 255 + buffer[4];
-  lengthRGB[2] = buffer[5] * 255 + buffer[6];
+  lengthRGB[0] = buffer[0] * 255 + buffer[1];
+  lengthRGB[1] = buffer[2] * 255 + buffer[3];
+  lengthRGB[2] = buffer[4] * 255 + buffer[5];
 
   int index,locmax,counter;
-  long r,g,b,color,number;
+  unsigned int r,g,b,number;
   short pixelpos;
 
-  counter = 7;
-
+  counter = 6;
+  if (bufferLength != (lengthRGB[0] + lengthRGB[1] + lengthRGB[2] + 6)){
+    if (Debug == true){Serial.println("3fail");}
+    return;
+  }
   for (int p = 0; p < 3;p++){
     locmax = lengthRGB[p] + counter;
     index = 0;
-    while (index <= locmax){
+    while (index < locmax){
       if (buffer[counter] == SkipSignal){
         index += buffer[counter+1];//the index in the pixel array, meaning the position of the pixel. Therefore since it is the RFCA v1. this is not the same as the counter index!
         counter +=2;//the index in the buffer array
@@ -120,8 +109,7 @@ void renderTypeThree(byte buffer[]){//RFCA compression V1.0 -->THIS DOES NOT WOR
         if (p == 0){r = buffer[counter];}
         if (p == 1){g = buffer[counter];}
         if (p == 2){b = buffer[counter];}
-        color = (r << 16) | (g << 8) | b;
-        leds.setPixel(pixelpos,color);
+        leds.setPixel(pixelpos,Color(r,g,b));
         index +=1;
         counter +=1;
       }
@@ -129,16 +117,16 @@ void renderTypeThree(byte buffer[]){//RFCA compression V1.0 -->THIS DOES NOT WOR
   }
   leds.show();
 }
-void renderTypeZero(byte buffer[]) {
+void renderTypeZero(int bufferLength) {
   int allpixels = leds.numPixels();
   long color;
   int pixelpos;
-  int innerLength = len(buffer);
+  int innerLength = bufferLength;//determine length of the array
   if (innerLength % 3 == 0) {
     if (Debug == true){Serial.println("0rnd");}
     for (int i = 0; i < (innerLength/3); i++) {
       if (i < allpixels) {
-        color = ((long)buffer[i] << 16) | ((long)buffer[i + innerLength] << 8) | (long)buffer[i + innerLength*2];
+        color = Color(buffer[i],buffer[i + (innerLength/3)],buffer[i + (innerLength/3)*2]);
         pixelpos = nbrPixelbyPosition(i);
         leds.setPixel(pixelpos, color);
       }
@@ -148,14 +136,13 @@ void renderTypeZero(byte buffer[]) {
   }else{
     if (Debug == true){Serial.println("0rndfaildivby3");}
   }
-  currentmode = 0;
 }
 
 //Various Functions
 int nbrPixelbyPosition(int position){
   int iY = position / Hlength;
   int iX = position % Hlength;
-  return setPixelbyCoordinate(iX,iY);
+  return nbrPixelbyCoordinate(iX,iY);
 }
 int nbrPixelbyCoordinate(int X,int Y){
   bool inverse = false;
@@ -181,3 +168,15 @@ int nbrPixelbyCoordinate(int X,int Y){
 
   return position;
 }
+
+void drawFrameFromBuffer(short frameType,int bufferLength){
+  if (Debug == true){Serial.println("type " + frameType);}
+  if (frameType == 0){
+    renderTypeZero(bufferLength);
+  }else if(frameType == 3){
+    renderTypeThree(bufferLength);
+  }else{
+    if (Debug == true){Serial.println("frtyNotFound");}
+  }
+ }
+

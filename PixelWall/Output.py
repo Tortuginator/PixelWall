@@ -3,7 +3,7 @@ sys.path.append('.\PixelWall')
 from PixelWall import Core,Exceptions,Compression,Frame
 from threading import Thread
 import RFCA
-import zlib
+
 
 class Output():
 	def __init__(self):
@@ -13,17 +13,18 @@ class Output():
 		raise NotImplementedError;
 
 class Serial(Output):
-	def __init__(self,port = "COM3",compression = "RFCA"):
+	def __init__(self,port = "COM10",compression = "RFCA"):
 		self.port = port
-		self.baudrate = 100000
+		self.baudrate = 1000000
 		self.ser = None
 		self.initbyte = 200
 		self.compression = compression
+		self.showrecv = True
 		if compression == "RFCA":
 			self.CompressionInstance = RFCA.RFCA(LOD = 0);
-
+		self.__fireUp();
 	def __fireUp(self):
-		#self.ser = serial.Serial(self.port, self.baudrate, timeout=0.5,bytesize = serial.EIGHTBITS)
+		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.1,bytesize = serial.EIGHTBITS)
 		#self.ser.open()
 		pass
 
@@ -51,18 +52,25 @@ class Serial(Output):
 		if self.compression == "LINEAR":
 			x = 2
 		elif self.compression == "RAW":
-			x = 1
+			x = 0
 		elif self.compression == "RFCA":
 			x = 3
-		init = [self.initbyte,x,len(data)//255,len(data)%255]
+		init = [self.initbyte,len(data)//255,len(data)%255,x]
+		print init
 		return bytearray(init) + data
 	#ABSTRACT
 	def output(self,data):
-		print "[+] Serial Transmission length",len(self.__correctFormat(self.__prepareData(data))),"bytes"
-		#self.ser.write(bytes(self.__correctFormat(self.__prepareData(data))))
+		tmp = self.__correctFormat(self.__prepareData(data))
+		print "[+] Serial Transmission length",len(tmp),"bytes"
+		self.ser.write(tmp)
+		if self.showrecv:
+			x = self.ser.readline() 
+			while x != "":
+				print x
+				x = self.ser.readline() 
 
 class BinaryFile(Output):
-	def __init__(self, filename = "output.bin", path = ""):
+	def __init__(self, filename = "frame.bin", path = ""):
 		self.filename = filename
 		self.filepath = path
 
@@ -70,11 +78,11 @@ class BinaryFile(Output):
 		if not isinstance(data,Frame.Frame):
 			raise Exceptions.unexpectedType(variable = "data",type="Frame.Frame")
 			return False
-		return Compression.toTransportfromLinear(Compression.toLinearfromRaw(data.getColorArr()))
+		a = data.getColorArr()
+		return bytearray(a[0] + a[1] + a[2])
 
 	def output(self,data):
 		data = self.__prepareData(data);
-		print data
 		if data is None:
 			print "[!][PixelWall/Output/BinaryFile][output] Something went wrong."
 			return False
