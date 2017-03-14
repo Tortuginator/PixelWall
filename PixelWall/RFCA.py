@@ -11,6 +11,7 @@ class RFCA():
         #Type,SubframeType,Framenumber
         initSeq = [len(self.last[0])//255,len(self.last[0])%255,len(self.last[1])//255,len(self.last[1])%255,len(self.last[2])//255,len(self.last[2])%255]
         #return initSeq + self.last[0] + self.last[1] + self.last[2]
+        print initSeq
         return bytearray(initSeq) + bytearray(self.last[0]) + bytearray(self.last[1]) + bytearray(self.last[2])
 
     def levelOfDetail(self,LOD):
@@ -117,7 +118,7 @@ class RFCA():
         self.frame = newFrame
         self.counter +=1
         self.last = compact
-
+        print self.last
     @staticmethod
     def __allowedSymbol(i):
         if i == 1:

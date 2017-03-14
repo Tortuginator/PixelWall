@@ -6,10 +6,9 @@ from Frame import Frame
 from Format import FrameFormat
 from Parallel import TimeManager
 import Core,Compression,Exceptions,Animations,AnimationFunctions
-from PixelWall.RenderObjects import *
 import Exceptions as Exceptions
-
-__all__ = ["RFCA","AnimationFunctions","Animations","Parallel","Frame","Format","Output","Input","Core","Compression","Exceptions","RenderObjects"]
+import PIL
+__all__ = ["RFCA","AnimationFunctions","Animations","Parallel","Frame","Format","Output","Input","Core","Compression","Exceptions"]
 
 class Engine():
     def __init__(self,height,width,Xinput,Xoutput,fps = 30):
@@ -48,21 +47,13 @@ class Engine():
                 return
             self.Xinput.setArgs(dFrame)
             A = self.Xinput.callData()
-
+            print "calling imput"
             if A is None:
                 print "[!][PixelWall\init\Engine][Render] Some error Occured while Calling the Input data"
                 return
             if A is False:
                 return #skip if previously a error occured
             self.AnimationManagementSystem.Render(dFrame);
-            if A.object != []:
-                for i in A.object:
-                    if not hasattr(i,"Render"):
-                        print "[!] Render function was not found while rendering for",repr(i)
-                    else:
-                        i.Render(A)
-                    
-                A.object = []
             self.Xoutput.output(A)
             self.lastFrame = A
         except Exception,e:

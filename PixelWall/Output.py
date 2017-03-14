@@ -24,7 +24,7 @@ class Serial(Output):
 			self.CompressionInstance = RFCA.RFCA(LOD = 0);
 		self.__fireUp();
 	def __fireUp(self):
-		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.1,bytesize = serial.EIGHTBITS)
+		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
 		#self.ser.open()
 		pass
 
@@ -34,7 +34,7 @@ class Serial(Output):
 			raise unexpectedType(variable = "data",type="Frame.Frame")
 		if self.compression == "RFCA":
 			tmp = data.getColorArr()
-			self.CompressionInstance.addFrame(tmp);
+			self.CompressionInstance.addFrame2(tmp);
 			return bytearray(self.CompressionInstance.getByteCode())
 
 		elif self.compression == "RAW":
@@ -55,6 +55,8 @@ class Serial(Output):
 			x = 0
 		elif self.compression == "RFCA":
 			x = 3
+		print "sendlen internal",len(data)
+		# print list(data)
 		init = [self.initbyte,len(data)//255,len(data)%255,x]
 		print init
 		return bytearray(init) + data
@@ -66,7 +68,7 @@ class Serial(Output):
 		if self.showrecv:
 			x = self.ser.readline() 
 			while x != "":
-				print x
+				#print x
 				x = self.ser.readline() 
 
 class BinaryFile(Output):

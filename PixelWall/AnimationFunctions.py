@@ -1,7 +1,7 @@
 import sys
 sys.path.append('.\PixelWall')
-from PixelWall import Core,RenderObjects,Frame
-
+from PixelWall import Core,Frame
+from PIL import Image,ImageDraw
 def Circle2(AnimationInstance,iteration,opacity,dFrame):
     """
     Draws A Circle
@@ -14,16 +14,17 @@ def Circle2(AnimationInstance,iteration,opacity,dFrame):
     -Radius: [INT] The maximal circle radius
     """
 
-    Color = (0,100,0)
-    ColorGRAD = (0,255,0)
+    Color = (50,100,200)
+    ColorGRAD = (255,0,0)
     Length = 5
-    position = Core.Point(15,15)
-
+    position = (14,14)
+    iteration = float(iteration)*0.2
     #else
     Cindex = int(iteration)
     baseColor = [Color[0]-ColorGRAD[0],Color[1]-ColorGRAD[1],Color[2]-ColorGRAD[2]]
 
-    for p in range(0,Cindex+1):
+
+    for p in range(Cindex+1,0,-1):
         CurrentRadius = p;MaxRadius = Cindex;FadeIn = Length;
 
         if MaxRadius-FadeIn <= CurrentRadius:
@@ -35,6 +36,6 @@ def Circle2(AnimationInstance,iteration,opacity,dFrame):
             divRad = Cindex
         else:
             divRad = p
-        divColor = (divRelation*Color[0] + ColorGRAD[0],divRelation*Color[1] + ColorGRAD[1],divRelation*Color[2] + ColorGRAD[2])
-        #def __init__(self,centerPoint,color,radius,fill = False,fillcolor = 0,opacity = 1):
-        dFrame.addObject(RenderObjects.Circle.Circle(position,divColor,divRad,opacity = opacity))
+        divColor = (int(divRelation*baseColor[0] + ColorGRAD[0]),int(divRelation*baseColor[1] + ColorGRAD[1]),int(divRelation*baseColor[2] + ColorGRAD[2]),255)
+        dFrame.imgdraw.ellipse([(position[0]-CurrentRadius,position[1]-CurrentRadius),(position[0]+CurrentRadius,position[1]+CurrentRadius)],fill = divColor)
+

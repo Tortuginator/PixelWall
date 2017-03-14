@@ -4,7 +4,7 @@
 const int SerialBaudrate = 1000000;
 const int Vlength = 28; // The vertival amount of lED's
 const int Hlength = 28; // The Horizontal amount of LED's
-const int Hbegin = 1;//where the initial strip beginns: Left -> 0, Right -> 1
+const int Hbegin = 0;//where the initial strip beginns: Left -> 0, Right -> 1
 const int VrowsperStrip = 4; // How many rows are there per strip
 
 const bool Debug = true;
@@ -18,12 +18,13 @@ char buffer [Vlength*Hlength*3+20];
 
 unsigned int Color(byte r, byte g, byte b)
 {
-  return (((unsigned int)r << 16) | ((unsigned int)g << 8) | (unsigned int)g);
+  return (((unsigned int)r << 16) | ((unsigned int)g << 8) | (unsigned int)b);
 }
 
 //Code
 void setup() {
   Serial.begin(1000000);
+  pinMode(13, OUTPUT);
   leds.begin();
   leds.show();
 }
@@ -46,11 +47,9 @@ void loop(){
 		}else{
 			break;//skip iteration
 		}
-
 		if (currentFlag == 0 and incomingSequenceFlag == incomingByte){
 			if (Debug == true){Serial.println("rcvnew");}
 			currentFlag = 1;
-
 		}else if (currentFlag == 1){
 			bufferLengthSTOR = incomingByte;
 			currentFlag = 2;
@@ -67,8 +66,9 @@ void loop(){
 
 		}else if (currentFlag == 4){
 			buffer[bufferPosition] = incomingByte;
-			bufferPosition +=1;
+      bufferPosition +=1;
 			if (bufferPosition == bufferLength){
+        Serial.println("lastbt" + String(int(buffer[bufferLength-1-20])) + " u " + String(int(buffer[bufferLength-20-2])) + " u " + String(int(buffer[bufferPosition-20-3])));
 				drawFrameFromBuffer(frameType,bufferLength);
 				currentFlag = 0;
 			}
@@ -93,15 +93,21 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
     if (Debug == true){Serial.println("3fail");}
     return;
   }
+  index = 0;
+  Serial.println(lengthRGB[0]);
+  Serial.println(lengthRGB[1]);
+  Serial.println(lengthRGB[2]);
+  locmax = counter;
   for (int p = 0; p < 3;p++){
-    locmax = lengthRGB[p] + counter;
-    index = 0;
+    locmax += lengthRGB[p];
+    Serial.println(locmax);
     while (index < locmax){
       if (buffer[counter] == SkipSignal){
         index += buffer[counter+1];//the index in the pixel array, meaning the position of the pixel. Therefore since it is the RFCA v1. this is not the same as the counter index!
         counter +=2;//the index in the buffer array
       }else{
         pixelpos = nbrPixelbyPosition(index);
+        pixelpos = index;
         number = leds.getPixel(pixelpos);
         r = number >> 16;
         g = number >> 8 & 0xFF;
@@ -118,16 +124,17 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
   leds.show();
 }
 void renderTypeZero(int bufferLength) {
-  int allpixels = leds.numPixels();
+  int allpixels = Vlength*Hlength;
   long color;
   int pixelpos;
   int innerLength = bufferLength;//determine length of the array
   if (innerLength % 3 == 0) {
     if (Debug == true){Serial.println("0rnd");}
-    for (int i = 0; i < (innerLength/3); i++) {
-      if (i < allpixels) {
-        color = Color(buffer[i],buffer[i + (innerLength/3)],buffer[i + (innerLength/3)*2]);
+    for (int i = 0; i <= (innerLength/3); i++) {
+      if (i <= allpixels) {
+        color = Color(buffer[i],buffer[i + (innerLength/3)],buffer[i + ((innerLength/3)*2)]);
         pixelpos = nbrPixelbyPosition(i);
+        //Serial.println(String(int(pixelpos)) + "at R" + String(int(buffer[i])) + " G" + String(int(buffer[i + (innerLength/3)])));
         leds.setPixel(pixelpos, color);
       }
     }
@@ -146,7 +153,7 @@ int nbrPixelbyPosition(int position){
 }
 int nbrPixelbyCoordinate(int X,int Y){
   bool inverse = false;
-  if (Y/2 == 1){//Uneven number
+  if (Y%2 == 1){//Uneven number
     if (Hbegin == 0){
       inverse = true;
     }else{
@@ -161,15 +168,26 @@ int nbrPixelbyCoordinate(int X,int Y){
   }
   int position = Y * Hlength;
   if (inverse == true){
-    position += Hlength-X;
+    position += Hlength-(X+1);
   }else{
     position += X;
   }
 
   return position;
 }
+short on = 0;
+void rndswitch(){
+  if (on == 1){
+    digitalWrite(13, HIGH);
+    on = 0;
+  }else{
+    digitalWrite(13, LOW);
+    on = 1;
+  }
+}
 
 void drawFrameFromBuffer(short frameType,int bufferLength){
+  rndswitch();
   if (Debug == true){Serial.println("type " + frameType);}
   if (frameType == 0){
     renderTypeZero(bufferLength);
