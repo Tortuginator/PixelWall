@@ -6,10 +6,12 @@ def testRND(dFrame):
 	#dFrame.imgdraw.rectangle((0,20,28,28),fill = "blue")
 	return dFrame
 
-F = PixelWall.Input.Function(testRND);
+F = PixelWall.Input.Function(testRND)
 #O = PixelWall.Output.BinaryFile()
 O = PixelWall.Output.Serial(port = "COM10",compression = "RAW")
-R = PixelWall.Engine(28,28,F,O,fps = 10)
-Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Circle2,startframe = 0,infinity = True,tourLength = 200)
+R = PixelWall.Engine(28,28,F,O,fps = 15)
+#Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Circle2,startframe = 0,infinity = True,tourLength = 200)
+#Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Chill,startframe = 0,infinity = True)
+Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Matrix,startframe = 0,infinity = True)
 R.AnimationManagementSystem.addAimation(Ani);
 R.fireUp();
