@@ -56,4 +56,8 @@ This part of the PixelWall engine, can display bitmaps and is enables you to def
 # Performace
 While testing, the Engine was running on a Microsoft surface Pro 4 with intel I7 and 16GB ram. For rendering complex animations at 60fps for a 30x30 pixelwall and sending them via serial, it only took 2% of the processor power.
 
-THIS PROGRAMM/SCRIPT IS OFFERED WITHOUT ANY WARRANTY OR WHAT SO EVER AND CAN NOT BE HELD LIABLE FOR ANY DAMAGES...
+## License
+
+[WTFPL](http://wtfpl.org)
+
+*****THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY EXPRESSED OR IMPLIED WARRANTIES. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)*****
