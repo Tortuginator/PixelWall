@@ -1,11 +1,6 @@
 import time
 from threading import Thread
 
-class Point(object):
-	def __init__(self,X,Y):
-		self.x = X
-		self.y = Y
-
 class CompressionType():
 	No = 0
 	Linear = 1

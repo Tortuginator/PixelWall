@@ -1,0 +1,46 @@
+<html>
+<canvas id="myCanvas" width="400" height="600" style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script type="application/javascript">
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+
+var tmp = null;
+window.setInterval(function(){
+  	var xhr = new XMLHttpRequest();
+	xhr.open('GET', 'frame.bin', true);
+	xhr.responseType = 'arraybuffer';
+	xhr.onload = function(e) {
+	  if (this.status == 200) {
+	  	ctx.clearRect(0, 0, ctx.width, ctx.height);
+	    var uInt8Array = new Uint8Array(this.response);
+      console.log(uInt8Array.length)
+      if (uInt8Array.length != 0){
+  	    if (tmp != uInt8Array){
+    			var h = 28;
+    			var w = 28;
+    			var totl = (h*w);
+    			for (i = 0; i < totl; i++) {
+    				var line = Math.floor(i/w);
+    				var rem = i % w;
+    				//console.log("X:" + rem + " Y:" + line + "0: " + i + " 1: " + totl+i+ " 2: " + 2*totl+i);
+    				ctx.fillStyle = "rgb(" + uInt8Array[i] + "," + uInt8Array[totl+i] + "," + uInt8Array[2*totl+i] + ")";
+    				ctx.fillRect(rem*10,line*10,9,9);
+    				ctx.fillRect(rem*10,300+line*10,10,10);
+    			}
+    			tmp = uInt8Array;
+          console.log("Updated")
+    		}else{
+          console.log("Skipped")
+        }
+      }
+
+	  }
+	};
+	xhr.send();
+}, 1/10);
+
+
+</script>
+
+</html>

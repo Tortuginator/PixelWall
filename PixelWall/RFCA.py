@@ -9,8 +9,9 @@ class RFCA():
 
     def getByteCode(self):
         #Type,SubframeType,Framenumber
-        initSeq = [3,0,self.counter%255,len(self.last[0])//255,len(self.last[0])%255,len(self.last[1])//255,len(self.last[1])%255,len(self.last[2])//255,len(self.last[2])%255]
-        return initSeq + self.last[0] + self.last[1] + self.last[2]
+        initSeq = [len(self.last[0])//255,len(self.last[0])%255,len(self.last[1])//255,len(self.last[1])%255,len(self.last[2])//255,len(self.last[2])%255]
+        #return initSeq + self.last[0] + self.last[1] + self.last[2]
+        print initSeq
         return bytearray(initSeq) + bytearray(self.last[0]) + bytearray(self.last[1]) + bytearray(self.last[2])
 
     def levelOfDetail(self,LOD):
@@ -18,6 +19,52 @@ class RFCA():
             self.LOD = 0
             return 0
         self.LOD = LOD
+
+    def addFrame2(self,newFrame):
+        difference = [[],[],[]]
+        if self.initNewFrame() is True:
+            return
+
+        for channel in range(0,len(self.frame)):
+            for p in range(0,len(self.frame[channel])):
+                lastP = -1
+                if abs(self.__allowedSymbol(newFrame[channel][p]) - self.frame[channel][p]) <= self.LOD:
+                    #no difference
+                    pass
+                else:
+                    if lastP == p-1:
+                        difference[channel].append(self.__allowedSymbol(newFrame[channel][p]))
+                        lastP = p
+                    else:
+                        skipped = p - (lastP+1)
+                        if skipped <= 2:
+                            for r in range(lastP+1,p):
+                                difference[channel].append(self.__allowedSymbol(newFrame[channel][r]))
+                        elif skipped > 255:
+                            for r in range(0,skipped//255):
+                                difference[channel].append(1)
+                                difference[channel].append(255)
+                            difference[channel].append(1)
+                            difference[channel].append(skipped%255)
+                        else:
+                            difference[channel].append(1)
+                            difference[channel].append(skipped)
+                        difference[channel].append(self.__allowedSymbol(newFrame[channel][p]))
+        self.frame = newFrame
+        self.counter +=1
+        self.last = compact
+    def initNewFrame(self,newFrame):
+        if self.frame == None:
+            self.frame = [[],[],[]]
+            for channel in range(0,len(newFrame)):
+                for p in range(0,len(newFrame[channel])):
+                    self.frame[channel].append(self.__allowedSymbol(newFrame[channel][p]))
+            self.last = self.frame
+            self.counter = 1
+            self.frame = newFrame
+            return True
+        else:
+            return False
 
     def addFrame(self,newFrame):
         difference = [[],[],[]]
@@ -71,7 +118,7 @@ class RFCA():
         self.frame = newFrame
         self.counter +=1
         self.last = compact
-
+        print self.last
     @staticmethod
     def __allowedSymbol(i):
         if i == 1:
