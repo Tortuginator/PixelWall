@@ -23,7 +23,7 @@ The engine offers a lot of input options:
  * Pygame [EXPERIMENTAL]
  * Function 
 
-#Output options
+# Output options
 The engine offers a lot of output options:
  * TCP network stream 
  * File 
