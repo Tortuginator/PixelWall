@@ -23,10 +23,10 @@ class Serial(Output):
 		if compression == "RFCA":
 			self.CompressionInstance = RFCA.RFCA(LOD = 0);
 		self.__fireUp();
+    
 	def __fireUp(self):
 		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
 		#self.ser.open()
-		pass
 
 	def __prepareData(self,data):
 		#data needs to be in raw format
