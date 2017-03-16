@@ -29,7 +29,7 @@ class AnimationManager():
         self.Animations.append(ani)
 
 class Animation(object):
-    def __init__(self,rFunc,startframe = 0,tourCount = 0,tourLength = 0,infinity = False,smooth = False):
+    def __init__(self,rFunc,startframe = 0,tourCount = 0,tourLength = 0,infinity = False,args = {},smooth = False):
         if smooth not in [True,False]:
             return "Smooth must be of type bool"
         self.smooth = smooth
@@ -70,5 +70,5 @@ class Animation(object):
             return (p,100)
         print "ERROR was not able to determine the iteration"
 
-    def Render(self,iteration,opacity,dFrame):
-        self.rFunc(self,iteration,opacity,dFrame);
+    def Render(self,iteration,opacity,dFrame,args = {}):
+        self.rFunc(self,iteration,opacity,dFrame,arguments = args);
