@@ -6,6 +6,8 @@ from PIL import Image,ImageDraw,ImageFilter
 
 ChillStorage = []
 MatrixStorage = []
+GifStorage = None
+global GifStorage
 
 def Circle2(AnimationInstance,iteration,opacity,dFrame):
     """
@@ -51,7 +53,7 @@ def Chill(AnimationInstance,iteration,opacity,dFrame):
     #imgdraw = ImageDraw.Draw(img)
     while (len(ChillStorage) < Drops):
         #X,Y,Color(R,G,B),speed,pos
-        ChillStorage.append([random.randint(0,27),random.randint(0,27),(random.randint(50,255),random.randint(0,50),random.randint(50,200)),random.randint(1,5),0])
+        ChillStorage.append([random.randint(0,27),random.randint(0,27),(random.randint(0,50),random.randint(100,255),random.randint(50,255)),random.randint(1,5),0])
     col = []
     for i in range(0,len(ChillStorage)):
         if ChillStorage[i][4] > 255:
@@ -88,3 +90,15 @@ def Matrix(AnimationInstance,iteration,opacity,dFrame):
         MatrixStorage[i] +=1;
         if MatrixStorage[i] > (dFrame.img.size[1]+length+random.randint(0,5)): #height
             MatrixStorage[i] = 0
+
+def GIF(AnimationInstance,iteration,opacity,dFrame):
+    global GifStorage
+    filename = "GIF\Fog.gif"
+    position = (-2,-2)
+    if GifStorage == None:
+        GifStorage = Image.open(filename)
+    try:
+        dFrame.img.paste(GifStorage,position)
+        GifStorage.seek(GifStorage.tell() + 1)
+    except Exception,e:
+        GifStorage.seek(0)
