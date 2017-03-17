@@ -94,14 +94,11 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
     return;
   }
   index = 0;
-  Serial.println(lengthRGB[0]);
-  Serial.println(lengthRGB[1]);
-  Serial.println(lengthRGB[2]);
   locmax = counter;
   for (int p = 0; p < 3;p++){
     locmax += lengthRGB[p];
     Serial.println(locmax);
-    while (index < locmax){
+    while (counter < locmax){
       if (buffer[counter] == SkipSignal){
         index += buffer[counter+1];//the index in the pixel array, meaning the position of the pixel. Therefore since it is the RFCA v1. this is not the same as the counter index!
         counter +=2;//the index in the buffer array

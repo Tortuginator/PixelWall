@@ -22,7 +22,7 @@ class RFCA():
 
     def addFrame2(self,newFrame):
         difference = [[],[],[]]
-        if self.initNewFrame() is True:
+        if self.initNewFrame(newFrame) is True:
             return
 
         for channel in range(0,len(self.frame)):
@@ -53,6 +53,7 @@ class RFCA():
         self.frame = newFrame
         self.counter +=1
         self.last = compact
+		
     def initNewFrame(self,newFrame):
         if self.frame == None:
             self.frame = [[],[],[]]

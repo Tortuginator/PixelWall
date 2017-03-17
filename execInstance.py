@@ -7,8 +7,8 @@ def testRND(dFrame):
 	return dFrame
 
 F = PixelWall.Input.Function(testRND)
-#O = PixelWall.Output.BinaryFile()
-O = PixelWall.Output.Serial(port = "COM6",compression = "RAW")
+O = PixelWall.Output.BinaryFile()
+#O = PixelWall.Output.Serial(port = "COM6",compression = "RAW")
 R = PixelWall.Engine(28,28,F,O,fps = 15)
 #Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Circle2,startframe = 0,infinity = True,tourLength = 200)
 #Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Chill,startframe = 0,infinity = True)

@@ -34,7 +34,7 @@ class Serial(Output):
 			raise unexpectedType(variable = "data",type="Frame.Frame")
 		if self.compression == "RFCA":
 			tmp = data.getColorArr()
-			self.CompressionInstance.addFrame2(tmp);
+			self.CompressionInstance.addFrame(tmp);
 			return bytearray(self.CompressionInstance.getByteCode())
 
 		elif self.compression == "RAW":
@@ -63,12 +63,13 @@ class Serial(Output):
 	#ABSTRACT
 	def output(self,data):
 		tmp = self.__correctFormat(self.__prepareData(data))
+		print list(tmp)
 		print "[+] Serial Transmission length",len(tmp),"bytes"
 		self.ser.write(tmp)
 		if self.showrecv:
 			x = self.ser.readline() 
 			while x != "":
-				#print x
+				print x
 				x = self.ser.readline() 
 
 class BinaryFile(Output):

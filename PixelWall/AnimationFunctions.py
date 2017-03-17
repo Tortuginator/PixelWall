@@ -88,7 +88,7 @@ def Chill(AnimationInstance,iteration,opacity,dFrame,arguments = {}):
         SpeedMin = arguments["SpeedMin"]
 
     #check
-    if colorLower[0] > ColorHigher[0] or colorLower[1] > ColorHigher[1] or colorLower[2] > colorHigher[2]:
+    if ColorLower[0] > ColorHigher[0] or ColorLower[1] > ColorHigher[1] or ColorLower[2] > ColorHigher[2]:
         return
         #raise FAILED TO DETERMINE THE MINA AND MAX COLOR
     if SpeedMax < SpeedMin:
