@@ -30,6 +30,17 @@ The engine offers a lot of output options:
  * Serial
 
 The different output formats use different looseless compressions matching their requirements, which enable them to send large amounts of pixels per second. Enabeling you to build even bigger pixelwalls.
+# DBSC (Dynamic Bit Shift Compression)
+This is Looseless compression is applied to all outgoing streams. RFCA V2 uses this Compression. DBSC can't be disabled.
+This compression checks for each bit how many bits would be saved, if the bits are removed when they are not needed. 
+Structure (n-bit mode):
+ * **Data Array [DA]** the "cut" bitstrings are stored here. All strings have the length of n bit
+ * **Indicator Array [IA]** 1-bit per "cut sequence", which indicated if the number is bigger than the number stored in the "cut sqequence"
+ * **Secondary Array [SA]** (8-n)bit array, where the bytes which dont fit in the data array are stored
+Single line structure: [Byte] Length DA in bit n*255,[Byte] Length DA in bit +255,[Byte] Length SA in bit n*255,[Byte] Length SA in bit +255,[Byte] Length IA in bit n*255,[Byte] Length IA in bit +255,[DA],[IA],[SA]
+
+For example: *00000111* (7) 8-bit will be shortened in 4 bit mode to *0111* 4-bit. Now a 0 will be stored in IA.
+When you have a number *10110110* (182) 8-bit will be shortened in 4-bit mode to *0110*. Now 1 is stored im SA, and therefore indicating, that *1011* is beeing saved in SA.
 
 # Dasychain
 The engine offers the possibility to dasychain multiple engines together. This means, that you run your engine on the Raspberry PI near your Pixelwall and set the input to TCP networkstream. This then allows you to stream content from anywhere in the world to your Pixelwall. 
