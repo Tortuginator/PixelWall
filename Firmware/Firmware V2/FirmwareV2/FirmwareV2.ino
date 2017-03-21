@@ -39,7 +39,7 @@ void loop(){
 	//frame configuration
 	short frameType = 0;
   short currentFlag = 0;
-  
+
 	byte incomingByte;
 	while (1==1){
 		if (Serial.available() > 0) {
@@ -59,7 +59,7 @@ void loop(){
 			if (Debug == true){Serial.println("rcvlen" + String(bufferLength));}
 			bufferPosition = 0;
 			currentFlag = 3;
-      
+
 		}else if (currentFlag == 3){
 			frameType = incomingByte;
 			currentFlag = 4;
@@ -68,7 +68,7 @@ void loop(){
 			buffer[bufferPosition] = incomingByte;
       bufferPosition +=1;
 			if (bufferPosition == bufferLength){
-        Serial.println("lastbt" + String(int(buffer[bufferLength-1-20])) + " u " + String(int(buffer[bufferLength-20-2])) + " u " + String(int(buffer[bufferPosition-20-3])));
+        //Serial.println("lastbt" + String(int(buffer[bufferLength-1-20])) + " u " + String(int(buffer[bufferLength-20-2])) + " u " + String(int(buffer[bufferPosition-20-3])));
 				drawFrameFromBuffer(frameType,bufferLength);
 				currentFlag = 0;
 			}
@@ -97,14 +97,13 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
   locmax = counter;
   for (int p = 0; p < 3;p++){
     locmax += lengthRGB[p];
-    Serial.println(locmax);
     while (counter < locmax){
       if (buffer[counter] == SkipSignal){
         index += buffer[counter+1];//the index in the pixel array, meaning the position of the pixel. Therefore since it is the RFCA v1. this is not the same as the counter index!
         counter +=2;//the index in the buffer array
       }else{
         pixelpos = nbrPixelbyPosition(index);
-        pixelpos = index;
+        pixelpos = index;//for debugging
         number = leds.getPixel(pixelpos);
         r = number >> 16;
         g = number >> 8 & 0xFF;
@@ -112,6 +111,7 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
         if (p == 0){r = buffer[counter];}
         if (p == 1){g = buffer[counter];}
         if (p == 2){b = buffer[counter];}
+        //Serial.println("idx: " + String(index) + " p:" + String(p) + " cnt:" + String(counter) + " R:"  +String(int(r)) + " G:" + String(int(g)) + " B:" + String(int(b)));
         leds.setPixel(pixelpos,Color(r,g,b));
         index +=1;
         counter +=1;
@@ -127,11 +127,11 @@ void renderTypeZero(int bufferLength) {
   int innerLength = bufferLength;//determine length of the array
   if (innerLength % 3 == 0) {
     if (Debug == true){Serial.println("0rnd");}
-    for (int i = 0; i <= (innerLength/3); i++) {
+    for (int i = 0; i <= ((innerLength/3)-1); i++) {
       if (i <= allpixels) {
+        //Serial.println("idx: " + String(i) + " R: " + String(int(buffer[i])) + " G: " + String(int(buffer[i + (innerLength/3)])) + " B: " + String(int(buffer[i + ((innerLength/3)*2)])));
         color = Color(buffer[i],buffer[i + (innerLength/3)],buffer[i + ((innerLength/3)*2)]);
         pixelpos = nbrPixelbyPosition(i);
-        //Serial.println(String(int(pixelpos)) + "at R" + String(int(buffer[i])) + " G" + String(int(buffer[i + (innerLength/3)])));
         leds.setPixel(pixelpos, color);
       }
     }
@@ -185,7 +185,7 @@ void rndswitch(){
 
 void drawFrameFromBuffer(short frameType,int bufferLength){
   rndswitch();
-  if (Debug == true){Serial.println("type " + frameType);}
+  if (Debug == true){Serial.println("type " + String(frameType));}
   if (frameType == 0){
     renderTypeZero(bufferLength);
   }else if(frameType == 3){
@@ -194,4 +194,3 @@ void drawFrameFromBuffer(short frameType,int bufferLength){
     if (Debug == true){Serial.println("frtyNotFound");}
   }
  }
-

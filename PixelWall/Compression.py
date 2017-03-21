@@ -1,11 +1,11 @@
 import Core
 
 def toLinearfromRaw(data):
-    indicator = 1;replacement = 2;new = [[],[],[]];
-    for channel in range(0,len(data)):
+    indicator = 1;replacement = 2;new = [[], [], []];
+    for channel in range(0, len(data)):
         temporary = []
         lastPoint = None
-        for point in range(0,len(data[channel])):
+        for point in range(0, len(data[channel])):
             if lastPoint != data[channel][point]:
                 if len(temporary) <= 3:
                     if len(temporary) != 0:
@@ -16,7 +16,7 @@ def toLinearfromRaw(data):
                                 new[channel].append(i)
                 else:
                     if len(temporary) > 255:
-                        for i in range(1,(len(temporary)-1)//254):
+                        for i in range(1, (len(temporary)-1)//254):
                             new[channel].append(indicator)
                             new[channel].append(temporary[0])
                             new[channel].append(254)
@@ -36,7 +36,7 @@ def toLinearfromRaw(data):
                     temporary.append(data[channel][point])
 
         if len(temporary) > 255:
-            for i in range(1,(len(temporary)-1)//254):
+            for i in range(1, (len(temporary)-1)//254):
                 new[channel].append(indicator)
                 new[channel].append(temporary[0])
                 new[channel].append(254)
@@ -56,20 +56,20 @@ def toLinearfromRaw(data):
 
 def toRawfromLinear(data):
     indicator = 1;
-    new = [[],[],[]]
+    new = [[], [], []]
     cnt = -1
     for i in data:
         locked = None
         cnt +=1
-        for x in range(0,len(i)):
+        for x in range(0, len(i)):
             if i[x] == indicator:
                 if x + 2 <= len(i):
                     #[Indicator][Value][Count]
-                    for r in range(0,i[x+2]+1):
+                    for r in range(0, i[x+2]+1):
                         new[cnt].append(i[x+1])#new value
                     locked = x+2;
                 else:
-                    Core.UtilPrint.compose("!","UDN",__name__,"found indicator byte at unintended position please check you indicator bytes")
+                    Core.UtilPrint.compose("!", "UDN", __name__, "found indicator byte at unintended position please check you indicator bytes")
             elif x <= locked:
                 pass
                 #to be ignored, because theese are the indicator and value bytes
@@ -88,10 +88,10 @@ def toLinearfromTransport(data):
     totalLengthG = int(ldat[2]) * 254 + int(ldat[3])
     totalLengthB = int(ldat[4]) * 254 + int(ldat[5])
     if Ldat != (totalLengthR + totalLengthG + totalLengthB+6):
-        Core.UtilPrint.compose("!",self.__class__,__name__,"failed to decode. The lengths do not match. The packet will be ignored.")
+        Core.UtilPrint.compose("!", self.__class__, __name__, "failed to decode. The lengths do not match. The packet will be ignored.")
         return False
 
-    newdata = [[],[],[]]
+    newdata = [[], [], []]
     newdata[0] = data[7:7+totalLengthR]
     newdata[1] = data[totalLengthR+7+1:totalLengthG+7+totalLengthR]
     newdata[2] = data[totalLengthG+7+totalLengthR+1:totalLengthG+7+totalLengthR+totalLengthB]
@@ -102,7 +102,7 @@ def toTransportfromLinear(data):
     lenR = len(data[0])
     lenG = len(data[1])
     lenB = len(data[2])
-    header = bytearray([lenR//254,lenR%254,lenG//254,lenG%254,lenB//254,lenB%254])
+    header = bytearray([lenR//254, lenR%254, lenG//254, lenG%254, lenB//254, lenB%254])
     if type(data[0]) == list:
         R = bytearray(data[0])
 

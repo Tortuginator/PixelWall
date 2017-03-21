@@ -1,7 +1,7 @@
 import socket,sys
-import time,datetime,serial
+import time, datetime, serial
 from threading import Thread
-import Core, Compression,Frame
+import Core, Compression, Frame
 
 class Input():
     def __init__(self):
@@ -17,7 +17,7 @@ class Input():
     	pass #only used sometimes
 
 class PyGame(Input):
-	def __init__(self,pyGameobj):
+	def __init__(self, pyGameobj):
 		self.PYobj = pyGameobj
 
 	def callData(self):
@@ -27,14 +27,14 @@ class PyGame(Input):
 		raise NotImplementedError
 
 class Function(Input):
-    def __init__(self,function):
+    def __init__(self, function):
         self.function = function
         self.args = None
 
     def callData(self):
         X = self.function(self.args);
-        if not isinstance(X,Frame.Frame):
-            print "[!][PixelWall\Input\Function][callData] please return a",repr(Frame.Frame), "from the function."
+        if not isinstance(X, Frame.Frame):
+            print "[!][PixelWall\Input\Function][callData] please return a", repr(Frame.Frame), "from the function."
             return False
         return X
 
@@ -46,7 +46,7 @@ class Function(Input):
         self.args = args
 
 class TCPServer(Input):
-    def __init__(self,ip = '',port = 4000):
+    def __init__(self, ip = '', port = 4000):
         self.ip = ip
         self.port = port
         self.instance = None
@@ -56,8 +56,9 @@ class TCPServer(Input):
         self.failcounter = 0
         self.maxfails = 3
         self.__fireUp();
+        self.args = None
 
-	def setBuffer(self,buffer):
+	def setBuffer(self, buffer):
 		if buffer != int(buffer) or not buffer > 0:
 			return False
 
@@ -68,7 +69,7 @@ class TCPServer(Input):
 		self.failcounter += 1
 		print "[+][PixelWall\Input\TCPServer][__fireUp] Starting..."
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.socket.bind((self.ip,self.port))
+		self.socket.bind((self.ip, self.port))
 		self.instance = Thread(target = TCPServer.__srvThread, args = (self, ))
 		self.instance.start()
 		print "[+][PixelWall\Input\TCPServer][__fireUp] Started"
@@ -89,18 +90,17 @@ class TCPServer(Input):
 				print "[+][PixelWall\Input\TCPServer][__srvThread] Client disconnected " + repr(client_address)
 			finally:
 				connection.close()
-				print "[+][PixelWall\Input\TCPServer][__srvThread] (FORCED) Client disconnected "+ repr(client_address)
+				print "[+][PixelWall\Input\TCPServer][__srvThread] (FORCED) Client disconnected " + repr(client_address)
 
-	def __verify(self,data):
+	def __verify(self, data):
 		return Compression.toRawfromLinear(Compression.toLinearfromTransport(data))
 
-    def __updateIncoming(self,data):
+    def __updateIncoming(self, data):
         isOK = self.__verify(data);
         self.data = isOK
         self.distinct = True
-		#Core.UtilPrint.compose("!",self.__class__,__name__,"Recived corrupt package data. Dumping Frame")
 
-	def callData(self,force = False):
+	def callData(self, force = False):
 		if not self.distinct is True and force is False:
 			return False
 		self.distinct = False;
@@ -109,7 +109,13 @@ class TCPServer(Input):
 			if self.failcounter >= self.maxfails:
 				raise failedToReconnect; #LOOK FOR SOMETHING BETTER
 			self.__fireUp();
-		return self.data
+
+        third = len(self.data)/3
+        for i in range(0, third):
+            Y = i // self.args.width
+            X = i % self.args.width
+            self.args.pixel[X, Y] = (self.data[i], self.data[i+third], self.data[i+third*2])
+		return self.args
 
 	def updateSinceLastCall(self):
 		return self.distinct;

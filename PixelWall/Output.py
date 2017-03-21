@@ -19,14 +19,15 @@ class Serial(Output):
 		self.ser = None
 		self.initbyte = 200
 		self.compression = compression
-		self.showrecv = True
+		self.showrecv = False
 		if compression == "RFCA":
 			self.CompressionInstance = RFCA.RFCA(LOD = 0);
 		self.__fireUp();
-    
+
 	def __fireUp(self):
-		self.ser = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
+		#self.ser = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
 		#self.ser.open()
+		pass
 
 	def __prepareData(self,data):
 		#data needs to be in raw format
@@ -46,7 +47,7 @@ class Serial(Output):
 			tmp = Compression.toLinearfromRaw(tmp)
 			return bytearray([item for sublist in tmp for item in sublist])
 
-		print "error compression not found"
+		print "[!] Compression not found"
 
 	def __correctFormat(self,data):
 		if self.compression == "LINEAR":
@@ -55,7 +56,6 @@ class Serial(Output):
 			x = 0
 		elif self.compression == "RFCA":
 			x = 3
-		print "sendlen internal",len(data)
 		# print list(data)
 		init = [self.initbyte,len(data)//255,len(data)%255,x]
 		print init
@@ -63,14 +63,14 @@ class Serial(Output):
 	#ABSTRACT
 	def output(self,data):
 		tmp = self.__correctFormat(self.__prepareData(data))
-		print list(tmp)
 		print "[+] Serial Transmission length",len(tmp),"bytes"
-		self.ser.write(tmp)
+		#self.ser.write(tmp)
+		print list(tmp)
 		if self.showrecv:
-			x = self.ser.readline() 
+			x = self.ser.readline()
 			while x != "":
-				print x
-				x = self.ser.readline() 
+				#print x
+				x = self.ser.readline()
 
 class BinaryFile(Output):
 	def __init__(self, filename = "frame.bin", path = ""):
@@ -89,6 +89,7 @@ class BinaryFile(Output):
 		if data is None:
 			print "[!][PixelWall/Output/BinaryFile][output] Something went wrong."
 			return False
+
 		with open(self.filepath + self.filename, "wb") as f:
 			f.write(data)
 

@@ -11,7 +11,7 @@ import PIL
 __all__ = ["RFCA","AnimationFunctions","Animations","Parallel","Frame","Format","Output","Input","Core","Compression","Exceptions"]
 
 class Engine():
-    def __init__(self,height,width,Xinput,Xoutput,fps = 30):
+    def __init__(self, height, width, Xinput, Xoutput, fps = 30):
         self.baseFrequency = fps
         self.frameHeight = height
         self.frameWidth = width
@@ -31,7 +31,7 @@ class Engine():
     def __adjustBrightness(self):
         raise NotImplementedError
 
-    def setBrightness(self,brightness):
+    def setBrightness(self, brightness):
         raise NotImplementedError
 
     def getBrightness(self):

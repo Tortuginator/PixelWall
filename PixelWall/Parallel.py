@@ -3,11 +3,11 @@ from threading import Thread
 import Core
 
 class TimeTrigger():
-	def __init__(self,timesPerSecond,function,args):
+	def __init__(self, timesPerSecond, function, args):
 		self.timesPerSecond = timesPerSecond
 		self.function = function
 		self.args = args
-		self.__setVars();
+		self.__setVars()
 		self.isSleeping = True
 		self.next = datetime.datetime.now()
 
@@ -25,7 +25,7 @@ class TimeTrigger():
 		if args != None:
 			self.args = args
 		self.isSleeping = False
-		self.function(self.args);
+		self.function(self.args)
 		self.isSleeping = True
 		return True
 
@@ -47,7 +47,6 @@ class TimeManager():
 		try:
 			innerStep = 0
 			innerMicrosecondDelta = (float(1)/float(self.baseFrequency))
-			print innerMicrosecondDelta
 			while(True):
 				time.sleep(innerMicrosecondDelta)
 				if innerStep >= self.baseFrequency-1:

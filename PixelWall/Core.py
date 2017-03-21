@@ -8,7 +8,7 @@ class CompressionType():
 
 	@staticmethod
 	def isCompression(compression):
-		if compression in [0,1,2]:
+		if compression in [0, 1, 2]:
 			return True
 		return False
 
@@ -33,7 +33,7 @@ class PrintRegister():
 		#reset
 		self.register = []
 
-	def doPrint(self,out):
+	def doPrint(self, out):
 		if not self.instance.isAlive:
 			self.__fireUp();
 		self.register.append(out);
@@ -43,5 +43,5 @@ global PNR
 PNR = PrintRegister();
 class UtilPrint():
 	@staticmethod
-	def compose(sign,parent,function,message):
+	def compose(sign, parent, function, message):
 		PNR.doPrint("[" + sign  + "][" +repr(parent)+ "][" +repr(function) + "] " + message)
