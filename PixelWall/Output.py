@@ -1,6 +1,6 @@
-import serial,sys
+import serial, sys
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Exceptions,Compression,Frame
+from PixelWall import Core, Exceptions, Compression, Frame
 from threading import Thread
 import RFCA
 
@@ -9,11 +9,11 @@ class Output():
 	def __init__(self):
 		pass
 	#ABSTRACT
-	def output(self,data):
+	def output(self, data):
 		raise NotImplementedError;
 
 class Serial(Output):
-	def __init__(self,port = "COM10",compression = "RFCA"):
+	def __init__(self, port = "COM10", compression = "RFCA"):
 		self.port = port
 		self.baudrate = 1000000
 		self.ser = None
@@ -29,10 +29,10 @@ class Serial(Output):
 		#self.ser.open()
 		pass
 
-	def __prepareData(self,data):
+	def __prepareData(self, data):
 		#data needs to be in raw format
-		if not isinstance(data,Frame.Frame):
-			raise unexpectedType(variable = "data",type="Frame.Frame")
+		if not isinstance(data, Frame.Frame):
+			raise unexpectedType(variable = "data", type="Frame.Frame")
 		if self.compression == "RFCA":
 			tmp = data.getColorArr()
 			self.CompressionInstance.addFrame(tmp);
@@ -49,7 +49,7 @@ class Serial(Output):
 
 		print "[!] Compression not found"
 
-	def __correctFormat(self,data):
+	def __correctFormat(self, data):
 		if self.compression == "LINEAR":
 			x = 2
 		elif self.compression == "RAW":
@@ -57,15 +57,14 @@ class Serial(Output):
 		elif self.compression == "RFCA":
 			x = 3
 		# print list(data)
-		init = [self.initbyte,len(data)//255,len(data)%255,x]
+		init = [self.initbyte, len(data)//255, len(data)%255, x]
 		print init
 		return bytearray(init) + data
 	#ABSTRACT
-	def output(self,data):
+	def output(self, data):
 		tmp = self.__correctFormat(self.__prepareData(data))
-		print "[+] Serial Transmission length",len(tmp),"bytes"
+		print "[+] Serial Transmission length", len(tmp), "bytes"
 		#self.ser.write(tmp)
-		print list(tmp)
 		if self.showrecv:
 			x = self.ser.readline()
 			while x != "":
@@ -78,13 +77,13 @@ class BinaryFile(Output):
 		self.filepath = path
 
 	def __prepareData(self, data):
-		if not isinstance(data,Frame.Frame):
-			raise Exceptions.unexpectedType(variable = "data",type="Frame.Frame")
+		if not isinstance(data, Frame.Frame):
+			raise Exceptions.unexpectedType(variable = "data", type="Frame.Frame")
 			return False
 		a = data.getColorArr()
 		return bytearray(a[0] + a[1] + a[2])
 
-	def output(self,data):
+	def output(self, data):
 		data = self.__prepareData(data);
 		if data is None:
 			print "[!][PixelWall/Output/BinaryFile][output] Something went wrong."
@@ -94,7 +93,7 @@ class BinaryFile(Output):
 			f.write(data)
 
 class TCPClient(Output):
-	def __init__(self,ip,port,connectOnInit = True):
+	def __init__(self, ip, port, connectOnInit = True):
 		self.ip = ip
 		self.port = port
 		self.failcounter = 0;
@@ -104,38 +103,40 @@ class TCPClient(Output):
 		if connectOnInit:
 			self.__connect();
 
-	def __connect(self,force = False):
+	def __connect(self, force = False):
 		if (self.failcounter >= self.failmax) and not force:
 			raise Exceptions.failedToReconnect;
 		try:
-			print "[+][PixelWall/Output/TCPClient][__connect] Connecting",repr(self.ip),"@",repr(self.port)
+			print "[+][PixelWall/Output/TCPClient][__connect] Connecting", repr(self.ip), "@", repr(self.port)
 
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.socket.connect((self.ip, self.port))
 			self.failcounter = 0
-		except Exception,e :
+
+		except Exception, e :
 			self.failcounter += 1
 			self.__connect()
 			print "[!][PixelWall/Output/TCPClient][__connect] Socket excption, trying to reconnect:", repr(e)
 
-	def reconnect(self,force = False):
+	def reconnect(self, force = False):
 		self.__connect(force);
 
 	def resetReconnectAttemps(self):
 		self.failcounter = 0
 		return True
 
-	def __prepareData(self,data):
-		if not isinstance(data,Frame.Frame):
-			print "[!][PixelWall/Output/TCPClient][__prepareData] wrong type. Excepting:",repr(Frame.Frame)
+	def __prepareData(self, data):
+		if not isinstance(data, Frame.Frame):
+			print "[!][PixelWall/Output/TCPClient][__prepareData] wrong type. Excepting:", repr(Frame.Frame)
 			return False
 		return Compression.toTransportfromLinear(Compression.toLinearfromRaw(data.getColorArr()))
 
-	def output(self,data):
+	def output(self, data):
 		data = self.__prepareData(data);
 		if data is None:
 			print "[!][PixelWall/Output/TCPClient][output] Something went wrong."
 			return False
+			
 		if data is False:
 			return False
 
@@ -144,7 +145,7 @@ class TCPClient(Output):
 		try:
 			self.socket.send(data)
 		except socket.timeout:
-			print "[!][PixelWall/Output/TCPClient][output] Socket timeout",repr(self.ip),"@",repr(self.port)
+			print "[!][PixelWall/Output/TCPClient][output] Socket timeout", repr(self.ip), "@", repr(self.port)
 			self.reconnect();
 		#Connect
 	def close(self):

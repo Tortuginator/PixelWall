@@ -5,10 +5,10 @@ import Output
 from Frame import Frame
 from Format import FrameFormat
 from Parallel import TimeManager
-import Core,Compression,Exceptions,Animations,AnimationFunctions
+import Core,Compression,Exceptions,Animations,AnimationFunctions,Drawing
 import Exceptions as Exceptions
 import PIL
-__all__ = ["RFCA","AnimationFunctions","Animations","Parallel","Frame","Format","Output","Input","Core","Compression","Exceptions"]
+__all__ = ["RFCA","AnimationFunctions","Animations","Parallel","Frame","Format","Output","Input","Core","Compression","Exceptions","Drawing"]
 
 class Engine():
     def __init__(self, height, width, Xinput, Xoutput, fps = 30):

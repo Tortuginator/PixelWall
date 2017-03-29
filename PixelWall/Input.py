@@ -1,4 +1,4 @@
-import socket,sys
+import socket, sys
 import time, datetime, serial
 from threading import Thread
 import Core, Compression, Frame
@@ -13,7 +13,7 @@ class Input():
     def updateSinceLastCall(self):
     	raise NotImplementedError;
 
-    def setArgs(self,data):
+    def setArgs(self, data):
     	pass #only used sometimes
 
 class PyGame(Input):
@@ -42,7 +42,7 @@ class Function(Input):
         return True;
 		#Allways true, because it should be called each time when it gets called from the engine
 
-    def setArgs(self,args):
+    def setArgs(self, args):
         self.args = args
 
 class TCPServer(Input):

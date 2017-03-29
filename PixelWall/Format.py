@@ -44,7 +44,7 @@ class FrameFormat():
 		if self.compression == Core.CompressionType.Object:
 			try:
 				self.__convObjToRaw();
-			except Exception,e:
+			except Exception, e:
 				print e
 		if self.compression == Core.CompressionType.No:
 			if not forceRaw:

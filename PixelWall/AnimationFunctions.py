@@ -1,5 +1,6 @@
 import sys
 import random
+import math
 sys.path.append('.\PixelWall')
 from PixelWall import Core,Frame
 from PIL import Image, ImageDraw, ImageFilter
@@ -168,3 +169,7 @@ def GIF(AnimationInstance, iteration, opacity, dFrame, arguments = {}):
         GifStorage.seek(GifStorage.tell() + 1)
     except Exception,e:
         GifStorage.seek(0)
+
+
+def clock(AnimationInstance, iteration, opacity, dFrame, arguments = {}):
+    pass

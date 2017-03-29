@@ -1,4 +1,4 @@
-import socket,sys,time,datetime
+import socket, sys, time, datetime
 from threading import Thread
 import Core
 
@@ -37,10 +37,10 @@ class TimeManager():
 
 	def fireUp(self):
 		try:
-			self.instance = Thread(target = TimeManager.__tmeThread, args = (self,))
+			self.instance = Thread(target = TimeManager.__tmeThread, args = (self, ))
 			self.instance.start()
 			print "[+][PixelWall\Parallel\TimeManager][fireUp] Management thread started"
-		except Exception,e:
+		except Exception, e:
 			print e
 
 	def __tmeThread(self):
@@ -57,8 +57,8 @@ class TimeManager():
 					if i.isSleeping is True:
 						try:
 							i.doExecute()
-						except Exception,e:
+						except Exception, e:
 							print "[!][PixelWall\Parallel\TimeManager][__tmeThread] Exception occured for " + repr(i.function)  + " @iteration " + repr(innerStep)
 							print repr(e)
-		except Exception,e:
+		except Exception, e:
 			print e
