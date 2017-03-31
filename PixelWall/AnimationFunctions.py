@@ -2,7 +2,7 @@ import sys
 import random
 import math
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Frame
+from PixelWall import Core,Frame,Drawing
 from PIL import Image, ImageDraw, ImageFilter
 
 ChillStorage = []
@@ -124,13 +124,20 @@ def Chill(AnimationInstance, iteration, opacity, dFrame, arguments = {}):
 def Matrix(AnimationInstance, iteration, opacity, dFrame, arguments = {}):
     """
     Shows the "typical hacker matrix". Basically Green Lines Vertically running down the screen, while fading out at the end
+    arguments:
+        -Color sets the color of the matrixeffect
+        -Length sets the length of the stripes
     """
     length = 10
     Color = (0, 200, 0)
 
     if "Length" in arguments:
-        length = arguments["Length"]
+        assert int(arguments["Length"]) > 0,"Length must be greater than 0"
+        length = int(arguments["Length"])
+
     if "Color" in arguments:
+        assert type(arguments["Color"]) is tuple, "Color needs to be type of tuple"
+        assert len(arguments["Color"]) == 3, "Color needs to be of length 3"
         Color = arguments["Color"]
 
     while len(MatrixStorage) < dFrame.img.size[0]: #width
@@ -151,17 +158,24 @@ def Matrix(AnimationInstance, iteration, opacity, dFrame, arguments = {}):
 def GIF(AnimationInstance, iteration, opacity, dFrame, arguments = {}):
     """
     Renders a GIF animation Frame by Frame. In case, the GIF animations "look weird" make sure that they dont use "transparent" layers or colors.
+    arguments:
+        -File the filename of the giffile
+        -Position the top-left corner's position
     """
     global GifStorage
-    filename = "GIF\Fog.gif"
-    position = (-2, -2)
+    filename = None
+    position = None
 
     if "File" in arguments:
         filename = arguments["File"]
 
     if "Position" in arguments:
+        assert type(arguments["Position"]) == tuple,"The position value needs to have the type tuple"
+        assert len(arguments["Position"]) == 2,"The position value needs to have the length 2"
         position = arguments["Position"]
 
+    assert filename != None,"The filename value needs to be set"
+    assert position != None,"The position value needs to be set"
     if GifStorage == None:
         GifStorage = Image.open(filename)
     try:
@@ -172,4 +186,76 @@ def GIF(AnimationInstance, iteration, opacity, dFrame, arguments = {}):
 
 
 def clock(AnimationInstance, iteration, opacity, dFrame, arguments = {}):
-    pass
+    """
+    Displays the current Systemtime as a Clock on the screen using circular clockwise gradients.
+    Arguments:
+        -Colors:
+            -ColorHours The Color of the Hour pointer
+            -ColorMinutes The color of the minutes pointer
+            -ColorSeconds The color of the seconds pointer
+        -Radi:
+            -HoursRad The Additional radius of the Hours circle
+            -SecondsRad ""
+            -MinutesRad ""
+        -Interpolate Interpolates the minutes and hour pointers, so that they don't do a sudden movement
+        -CenterPosition The Center of the Clock aka. Circles
+    """
+    ColorSeconds = (0,0,200)
+    ColorMinutes = (0,200,0)
+    ColorHours = (200,0,0)
+    CenterPosition = None
+    HoursRad = 10
+    MinutesRad = 10
+    SecondsRad = 10
+    Interpolate = True
+
+    if "ColorHours" in arguments:
+        assert type(arguments["ColorHours"]) == tuple,"The ColorHours value needs to be a tuple"
+        assert len(arguments["ColorHours"]) == 3,"The ColorHours value needs to of length 3"
+        ColorHours = argumetns["ColorHours"]
+
+    if "ColorMinutes" in argumets:
+        assert type(arguments["ColorMinutes"]) == tuple,"The ColorMinutes value needs to be a tuple"
+        assert len(arguments["ColorMinutes"]) == 3,"The ColorMinutes value needs to of length 3"
+        ColorMinutes = arguments["ColorMinuts"]
+
+    if "ColorSeconds" in arguments:
+        assert type(arguments["ColorSeconds"]) == tuple,"The ColorSeconds value needs to be a tuple"
+        assert len(arguments["ColorSeconds"]) == 3,"The ColorSeconds value needs to of length 3"
+        ColorSeconds = arguments["ColorSeconds"]
+
+    if "Interpoate" in arguments:
+        assert type(arguments["interpolate"]) == bool,"The Interpolate value needs to be of type boolean"
+        Interpoate = arguments["Interpolate"]
+
+    if "CenterPosition" in arguments:
+        assert type(arguments["CenterPosition"]) == tuple,"CenterPosition must be a tuple"
+        assert len(arguments["CenterPosition"]) == 2,"CenterPosition must be of length 2"
+        CenterPosition = arguments["CenterPosition"]
+
+    if "SecondsRad" in arguments:
+        SecondsRad = int(arguments["SecondsRad"])
+
+    if "MinutesRad" in arguments:
+        MinutesRad = int(arguments["MinutesRad"])
+
+    if "HoursRad" in arguments:
+        HoursRad = int(arguments["HoursRad"])
+
+    assert CenterPosition is not None, "CenterPosition variable must be set and can not be empty"
+    assert SecondsRad > 0,"The SecondsRad value needs to be greater than 0"
+    assert SecondsRad < MinutesRad < HoursRad,"The Radi of the different units: Hours,Minutes,Seconds are not in the correct 'Smaller than' order"
+
+    if Interpoate is True:
+        locTime = time.localtime(time.time())
+        seconds = locTime[5]*float(360/60)
+        minutes = locTime[4]*float(360/60)+((1/float(60))*locTime[5])*float(360/60)
+        hours = (locTime[3]%12)*float(360/12) + (1/float(60))*(locTime[4])*float(360/12)
+    else:
+        seconds = locTime[5]*float(360/60)
+        minutes = locTime[4]*float(360/60)
+        hours = (locTime[3]%12)*float(360/12)
+
+    Drawing.RadialCircle(dFrame.img, HoursRad+MinutesRad+SecondsRad, CenterPosition, ColorHours, 1.0, 0.0, OffDegrees = hours, CircleCutoff = SecondsRad + MinutesRad-1, invert = True)
+    Drawing.RadialCircle(dFrame.img, MinutesRad+SecondsRad, CenterPosition, ColorMinuts, 1.0, 0.0, OffDegrees = minutes, CircleCutoff = SecondsRad-1, invert = True)
+    Drawing.RadialCircle(dFrame.img, SecondsRad, CenterPosition, ColorSeconds, 1.0, 0.0, OffDegrees = seconds, invert = True)
