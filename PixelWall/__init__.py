@@ -3,21 +3,21 @@ import traceback
 import Input
 import Output
 from Frame import Frame
-from Format import FrameFormat
 from Parallel import TimeManager
-import Core,Compression,Exceptions,Animations,AnimationFunctions,Drawing,PresetAnimations
+import Core,Compression,Exceptions,Animations,Drawing,PresetAnimations
 import Exceptions as Exceptions
+from PresetAnimations import *
 import PIL
-__all__ = ["RFCA","AnimationFunctions","Animations","Parallel","Frame","Format","Output","Input","Core","Compression","Exceptions","Drawing","PresetAnimations"]
+__all__ = ["RFCA","Animations","Parallel","Frame","Output","Input","Core","Compression","Exceptions","Drawing","PresetAnimations","DBSC"]
 
 class Engine():
-    def __init__(self, height, width, Xinput, Xoutput, fps = 30):
+    def __init__(self, XOutput, height = 32, width = 32,fps = 30, XInput = None):
         self.baseFrequency = fps
         self.frameHeight = height
         self.frameWidth = width
         self.brightness = float(1)
-        self.Xinput = Xinput
-        self.Xoutput = Xoutput
+        self.Xinput = XInput
+        self.Xoutput = XOutput
         self.lastFrame = None
         self.framenumber = 0
         self.AnimationManagementSystem = Animations.AnimationManager(self.baseFrequency)
@@ -45,17 +45,12 @@ class Engine():
             updatedFrame = self.Xinput.updateSinceLastCall()
             if not updatedFrame:
                 return
-            self.Xinput.setArgs(dFrame)
-            A = self.Xinput.callData()
-            print "calling imput"
-            if A is None:
-                print "[!][PixelWall\init\Engine][Render] Some error Occured while Calling the Input data"
-                return
-            if A is False:
-                return #skip if previously a error occured
+            if self.Xinput != None:
+                self.Xinput.setArgs(dFrame)
+                self.Xinput.callData()
             self.AnimationManagementSystem.Render(dFrame);
-            self.Xoutput.output(A)
-            self.lastFrame = A
+            self.Xoutput.output(dFrame)
+            self.lastFrame = dFrame
         except Exception,e:
             print e
             traceback.print_exc()

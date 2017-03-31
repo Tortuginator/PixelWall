@@ -23,7 +23,7 @@ unsigned int Color(byte r, byte g, byte b)
 
 //Code
 void setup() {
-  Serial.begin(1000000);
+  Serial.begin(SerialBaudrate);
   pinMode(13, OUTPUT);
   leds.begin();
   leds.show();

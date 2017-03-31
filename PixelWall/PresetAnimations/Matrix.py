@@ -2,14 +2,14 @@ import sys
 import random
 import math
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Frame,Drawing,AnimationInstance
+from PixelWall import Core,Frame,Drawing,PresetAnimations
 from PIL import Image, ImageDraw, ImageFilter
 
-class Matrix(AnimationInstance):
+class Matrix(PresetAnimations.AnimationInstance):
     def extendedInit(self):
         self.matrix = []
 
-    def _Render(self):
+    def Render(self):
         """
         Shows the "typical hacker matrix". Basically Green Lines Vertically running down the screen, while fading out at the end
         arguments:

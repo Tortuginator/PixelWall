@@ -115,7 +115,7 @@ class TCPServer(Input):
             Y = i // self.args.width
             X = i % self.args.width
             self.args.pixel[X, Y] = (self.data[i], self.data[i+third], self.data[i+third*2])
-		return self.args
+        return self.args
 
 	def updateSinceLastCall(self):
 		return self.distinct;

@@ -1,6 +1,6 @@
 import serial, sys
 sys.path.append('.\PixelWall')
-from PixelWall import Core, Exceptions, Compression, Frame
+from PixelWall import Core, Exceptions, Compression, Frame,DBSC
 from threading import Thread
 import RFCA
 
@@ -13,20 +13,24 @@ class Output():
 		raise NotImplementedError;
 
 class Serial(Output):
-	def __init__(self, port = "COM10", compression = "RFCA"):
+	def __init__(self, port = "COM10", compression = "RFCA",loopback = False):
 		self.port = port
 		self.baudrate = 1000000
 		self.ser = None
 		self.initbyte = 200
 		self.compression = compression
 		self.showrecv = False
-		if compression == "RFCA":
+		self.loopback = loopback
+		if self.compression == "RFCA":
 			self.CompressionInstance = RFCA.RFCA(LOD = 0);
 		self.__fireUp();
-
+		if loopback is True:
+			print "[!]WARNING: Loopback on the Serialoutput is Enabled"
 	def __fireUp(self):
-		#self.ser = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
+		if self.loopback is False:
+			self.ser = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
 		#self.ser.open()
+		print "[+]Serial Port Initialized @",self.port,"with baudrate",self.baudrate
 		pass
 
 	def __prepareData(self, data):
@@ -56,20 +60,22 @@ class Serial(Output):
 			x = 0
 		elif self.compression == "RFCA":
 			x = 3
-		# print list(data)
 		init = [self.initbyte, len(data)//255, len(data)%255, x]
-		print init
-		return bytearray(init) + data
+		tmp = list(bytearray(init) + data)
+		t = DBSC.DBSC(tmp).CalculateShiftMode()
+		print "[+] Length Comparison:",t[1], "VS",len(tmp)," Savings:",len(tmp)-t[1]
+		return tmp
 	#ABSTRACT
 	def output(self, data):
 		tmp = self.__correctFormat(self.__prepareData(data))
 		print "[+] Serial Transmission length", len(tmp), "bytes"
-		#self.ser.write(tmp)
-		if self.showrecv:
-			x = self.ser.readline()
-			while x != "":
-				#print x
+		if self.loopback is False:
+			self.ser.write(tmp)
+			if self.showrecv:
 				x = self.ser.readline()
+				while x != "":
+					print x
+					x = self.ser.readline()
 
 class BinaryFile(Output):
 	def __init__(self, filename = "frame.bin", path = ""):
@@ -136,7 +142,7 @@ class TCPClient(Output):
 		if data is None:
 			print "[!][PixelWall/Output/TCPClient][output] Something went wrong."
 			return False
-			
+
 		if data is False:
 			return False
 

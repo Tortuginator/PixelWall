@@ -2,11 +2,11 @@ import sys
 import random
 import math
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Frame,Drawing,AnimationInstance
+from PixelWall import PresetAnimations
 from PIL import Image, ImageDraw, ImageFilter
 
-class Circle2(AnimationInstance):
-    def _Render(self):
+class Circle2(PresetAnimations.AnimationInstance):
+    def Render(self):
         """
         Draws A Circle
         -The circle has a inner fade
@@ -29,12 +29,13 @@ class Circle2(AnimationInstance):
             ColorGRAD = self.args["ColorFill"]
         if "ColorBorder" in self.args:
             Color = self.args["ColorBorder"]
+
         if "Position" in self.args:
             position = self.args["position"]
         if "Length" in self.args:
             Length = self.args["Length"]
         if "Speed" in self.args:
-            Speed = self.args["Speed"]
+            Speed = float(self.args["Speed"])
 
 
         iteration = float(self.iteration)*Speed

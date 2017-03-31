@@ -1,3 +1,4 @@
+import sys
 sys.path.append('.\PixelWall')
 from PixelWall import Core,Frame
 import math
@@ -48,3 +49,24 @@ def RadialCircle(dFrame,CircleRadius,CirclePosition,CircleColor,StartOpacity = 1
     CircleMask = CircularGradientMask(CircleRadius,CircleRadius*2,CircleRadius*2,(CircleRadius+offsetGradient[0],CircleRadius+offsetGradient[1]),StartOpacity,EndOpacity,OffDegrees,cutoff = CircleCutoff,invert = invert)
     #Paste Result
     dFrame.img.paste(CircleImage,box = (CirclePosition[0]-CircleRadius,CirclePosition[1]-CircleRadius),mask = CircleMask)
+
+def SmoothRectangle(dFrame,position,color,height,width):
+    assert type(position) == tuple,"position in the wrong format"
+    assert len(position) == 2,"position not in the right length"
+
+    assert type(color)== tuple,"color in the wrong format"
+    assert len(color) == 3,"color has the length"
+
+    assert type(height) == int  and type(width) == int,"wring height/width format"
+
+    Xpos = int(position[0])
+    Ypos = int(position[1])
+
+    Xopacity = float(position[0]) - Xpos
+    Yopacity = float(position[1]) - Ypos
+
+    dFrame.imgdraw.rectangle((Xpos+width+1,Ypos,Xpos+width+1,Ypos+height),fill = (color[0],color[1],color[2],int(255*Xopacity)))
+    dFrame.imgdraw.rectangle((Xpos,Ypos+height+1,Xpos+width,Ypos+height+1),fill = (color[0],color[1],color[2],int(255*Yopacity)))
+    if Xopacity > 0 and Yopacity > 0:
+        dFrame.imgdraw.point((Xpos+width+1,Ypos+height+1),(color[0],color[1],color[2],int(((Xopacity+Yopacity)/2)*255)))
+    dFrame.imgdraw.rectangle((Xpos,Ypos,Xpos+width,Ypos+height),fill = (color[0],color[1],color[2],255))

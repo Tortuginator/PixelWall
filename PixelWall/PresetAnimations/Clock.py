@@ -2,14 +2,14 @@ import sys
 import random
 import math
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Frame,Drawing,AnimationInstance
+from PixelWall import Core,Frame,Drawing,PresetAnimations
 from PIL import Image, ImageDraw, ImageFilter
 
-class Clock(AnimationInstance):
-    def _Render(self):
+class Clock(PresetAnimations.AnimationInstance):
+    def Render(self):
         """
         Displays the current Systemtime as a Clock on the screen using circular clockwise gradients.
-        args:
+        arguments:
             -Colors:
                 -ColorHours The Color of the Hour pointer
                 -ColorMinutes The color of the minutes pointer

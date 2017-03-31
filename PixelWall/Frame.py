@@ -10,7 +10,7 @@ class Frame():
 		self.PixelCount = height*width
 		self.FunctionStorage = []
 		self.img = Image.new("RGBA", (self.height, self.width), (0, 0, 0, 0));
-		self.pixel = img.load()
+		self.pixel = self.img.load()
 		self.imgdraw = ImageDraw.Draw(self.img)
 
 	def getColorArr(self):

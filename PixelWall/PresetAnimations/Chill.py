@@ -2,11 +2,11 @@ import sys
 import random
 import math
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Frame,Drawing,AnimationInstance
+from PixelWall import Core,Frame,Drawing,PresetAnimations
 from PIL import Image, ImageDraw, ImageFilter
 
-class Chill(AnimationInstance):
-    def _Render(self):
+class Chill(PresetAnimations.AnimationInstance):
+    def Render(self):
         """
         Chill is a Animation, which draws random points of random color on a random location of the Canvas
         This Canvas will the be blurred using the GaussianBlur Algorithm
