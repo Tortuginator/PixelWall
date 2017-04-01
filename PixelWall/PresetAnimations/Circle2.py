@@ -33,7 +33,7 @@ class Circle2(PresetAnimations.AnimationInstance):
         if "Position" in self.args:
             position = self.args["position"]
         if "Length" in self.args:
-            Length = self.args["Length"]
+            Length = int(self.args["Length"])
         if "Speed" in self.args:
             Speed = float(self.args["Speed"])
 

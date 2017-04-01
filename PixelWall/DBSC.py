@@ -16,7 +16,7 @@ class DBSC:
 			for m in range(0,len(modi)):
 				if i < (modi[m]+shiftI)%256:tmp[m] +=1;
         minM = 0
-        minV = 10000000
+        minV = 10000000#put MAX here
         for i in range(0,len(tmp)):
             r = self.length(i,len(self.data),tmp[i])
             if r > 0:

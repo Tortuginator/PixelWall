@@ -16,7 +16,7 @@ class RFCA():
     def levelOfDetail(self, LOD):
         if LOD < 0 and LOD > 10:
             self.LOD = 0
-            return 0
+            return
         self.LOD = LOD
 
     def addFrame(self, newFrame):

@@ -11,7 +11,7 @@ class AnimationManager():
         for i in self.Animations:
             if i.disabled is True: continue;
             currIter = i.getIteration(dFrame.framenumber, self.fps)
-            print "Current Iteration" , currIter
+            if i.debug:print "[-] Current Iteration for ",rFunc, "@",currIter;
             if i.last != currIter:
                 if i.last == None:
                     i.last = currIter
@@ -29,15 +29,19 @@ class AnimationManager():
         self.Animations.append(ani)
 
 class Animation(object):
-    def __init__(self, rFunc, startframe = 0, tourCount = 0, tourLength = 0, infinity = False, smooth = False):
-        if smooth not in [True, False]:
-            return "Smooth must be of type bool"
+    def __init__(self, rFunc, startframe = 0, tourCount = 0, tourLength = 0, infinity = False, smooth = False,debug = False):
+        assert type(infinity) == bool,"The argument 'infinity' needs to be of type bool"
+        assert type(smooth) == bool,"The argument 'smooth' needs to be of type bool"
+        assert type(debug) == bool,"The argument 'debug' needs to be of type bool"
+        assert startframe >= 0,"The argument 'startframe' can't be below 0"
+        assert tourLength >= 0, "The argument 'tourLength' can't be below 0"
+        assert tourCount >= 0, "The argument 'tourCount' can't be below 0"
+
         self.smooth = smooth
         self.tourLength = tourLength
-        if infinity not in [True, False]:
-            return "Infinity must be of type bool"
         self.infinity = infinity
         self.startframe = startframe
+        self.debug = debug
         self.last = None
         self.prev = None
         self.disabled = False

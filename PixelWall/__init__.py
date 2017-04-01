@@ -46,8 +46,7 @@ class Engine():
             if not updatedFrame:
                 return
             if self.Xinput != None:
-                self.Xinput.setArgs(dFrame)
-                self.Xinput.callData()
+                self.Xinput.callData(dFrame)
             self.AnimationManagementSystem.Render(dFrame);
             self.Xoutput.output(dFrame)
             self.lastFrame = dFrame

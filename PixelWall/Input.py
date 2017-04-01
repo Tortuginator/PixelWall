@@ -1,5 +1,4 @@
-import socket, sys
-import time, datetime, serial
+import socket, sys, time, datetime, serial
 from threading import Thread
 import Core, Compression, Frame
 
@@ -7,20 +6,17 @@ class Input():
     def __init__(self):
     	self.distinct = None
 
-    def callData(self):
+    def callData(self,dFrame):
     	raise NotImplementedError;
 
     def updateSinceLastCall(self):
     	raise NotImplementedError;
 
-    def setArgs(self, data):
-    	pass #only used sometimes
-
 class PyGame(Input):
 	def __init__(self, pyGameobj):
 		self.PYobj = pyGameobj
 
-	def callData(self):
+	def callData(self,dFrame):
 		raise NotImplementedError
 
 	def updateSinceLastCall(self):
@@ -31,19 +27,14 @@ class Function(Input):
         self.function = function
         self.args = None
 
-    def callData(self):
-        X = self.function(self.args);
-        if not isinstance(X, Frame.Frame):
+    def callData(self,dFrame):
+        if not isinstance(dFrame, Frame.Frame):
             print "[!][PixelWall\Input\Function][callData] please return a", repr(Frame.Frame), "from the function."
             return False
-        return X
 
     def updateSinceLastCall(self):
         return True;
 		#Allways true, because it should be called each time when it gets called from the engine
-
-    def setArgs(self, args):
-        self.args = args
 
 class TCPServer(Input):
     def __init__(self, ip = '', port = 4000):
@@ -100,7 +91,7 @@ class TCPServer(Input):
         self.data = isOK
         self.distinct = True
 
-	def callData(self, force = False):
+	def callData(self, dFrame,force = False):
 		if not self.distinct is True and force is False:
 			return False
 		self.distinct = False;
@@ -112,10 +103,9 @@ class TCPServer(Input):
 
         third = len(self.data)/3
         for i in range(0, third):
-            Y = i // self.args.width
-            X = i % self.args.width
-            self.args.pixel[X, Y] = (self.data[i], self.data[i+third], self.data[i+third*2])
-        return self.args
+            Y = i // dFrame.width
+            X = i % dFrame.width
+            dFrame.pixel[X, Y] = (self.data[i], self.data[i+third], self.data[i+third*2])
 
 	def updateSinceLastCall(self):
 		return self.distinct;

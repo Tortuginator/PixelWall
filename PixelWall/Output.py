@@ -26,6 +26,7 @@ class Serial(Output):
 		self.__fireUp();
 		if loopback is True:
 			print "[!]WARNING: Loopback on the Serialoutput is Enabled"
+			
 	def __fireUp(self):
 		if self.loopback is False:
 			self.ser = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
@@ -54,6 +55,7 @@ class Serial(Output):
 		print "[!] Compression not found"
 
 	def __correctFormat(self, data):
+		#The Firmware currently can only decode RFCA and RAW
 		if self.compression == "LINEAR":
 			x = 2
 		elif self.compression == "RAW":
@@ -65,17 +67,29 @@ class Serial(Output):
 		t = DBSC.DBSC(tmp).CalculateShiftMode()
 		print "[+] Length Comparison:",t[1], "VS",len(tmp)," Savings:",len(tmp)-t[1]
 		return tmp
-	#ABSTRACT
+
 	def output(self, data):
 		tmp = self.__correctFormat(self.__prepareData(data))
 		print "[+] Serial Transmission length", len(tmp), "bytes"
 		if self.loopback is False:
 			self.ser.write(tmp)
-			if self.showrecv:
+			x = self.ser.readline()
+			while x != "":
+				if self.showrecv:print x;
 				x = self.ser.readline()
-				while x != "":
-					print x
-					x = self.ser.readline()
+				self.handleResponse(x)
+
+	def handleResponse(self,reponse):
+		if response == "0RNDfaildivby3":
+			print "[!][SERIALDEVICE][RAW] WARNING: Serialdevice skipped one frame, because of a transmission fault [divby3]"
+		elif response == "DFFBfrtyNotFound":
+			print"[!][SERIALDEVICE] WARNING: Serialdevice skipped one frame, because of a error while interpreting the INIT bytes"
+		elif response == "3RNDcounterNmatch":
+			print "[!][SERIALDEVICE][RFCA] WARNING: Serialdevice skipped one frame, because of a bufferlength deocding error"
+		elif reponse == "DFFB2notsupp":
+			print "[!][SERIALDEVICE][LINEAR] WARNING: Serialdevice skipped one frame, because the compression is not supported"
+		elif reponse == "DFFB3notsupp":
+			print "[!][SERIALDEVICE][RFCA] WARNING: Serialdevice skipped one frame, because the compression is not supported"
 
 class BinaryFile(Output):
 	def __init__(self, filename = "frame.bin", path = ""):

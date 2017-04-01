@@ -41,14 +41,14 @@ void loop(){
   short currentFlag = 0;
 
 	byte incomingByte;
-	while (1==1){
+	while (true){
 		if (Serial.available() > 0) {
 			incomingByte = Serial.read();
 		}else{
 			break;//skip iteration
 		}
 		if (currentFlag == 0 and incomingSequenceFlag == incomingByte){
-			if (Debug == true){Serial.println("rcvnew");}
+			if (Debug == true){Serial.println("RCVnew");}
 			currentFlag = 1;
 		}else if (currentFlag == 1){
 			bufferLengthSTOR = incomingByte;
@@ -56,7 +56,7 @@ void loop(){
 
 		}else if(currentFlag == 2){
 			bufferLength = (bufferLengthSTOR * 255) + incomingByte;
-			if (Debug == true){Serial.println("rcvlen" + String(bufferLength));}
+			if (Debug == true){Serial.println("RVClen" + String(bufferLength));}
 			bufferPosition = 0;
 			currentFlag = 3;
 
@@ -90,7 +90,7 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
 
   counter = 6;
   if (bufferLength != (lengthRGB[0] + lengthRGB[1] + lengthRGB[2] + 6)){
-    if (Debug == true){Serial.println("3fail");}
+    if (Debug == true){Serial.println("3RNDcounterNmatch");}
     return;
   }
   index = 0;
@@ -103,7 +103,7 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
         counter +=2;//the index in the buffer array
       }else{
         pixelpos = nbrPixelbyPosition(index);
-        pixelpos = index;//for debugging
+        //pixelpos = index;//for debugging
         number = leds.getPixel(pixelpos);
         r = number >> 16;
         g = number >> 8 & 0xFF;
@@ -126,7 +126,7 @@ void renderTypeZero(int bufferLength) {
   int pixelpos;
   int innerLength = bufferLength;//determine length of the array
   if (innerLength % 3 == 0) {
-    if (Debug == true){Serial.println("0rnd");}
+    if (Debug == true){Serial.println("0RNDinit");}
     for (int i = 0; i <= ((innerLength/3)-1); i++) {
       if (i <= allpixels) {
         //Serial.println("idx: " + String(i) + " R: " + String(int(buffer[i])) + " G: " + String(int(buffer[i + (innerLength/3)])) + " B: " + String(int(buffer[i + ((innerLength/3)*2)])));
@@ -135,10 +135,10 @@ void renderTypeZero(int bufferLength) {
         leds.setPixel(pixelpos, color);
       }
     }
-    if (Debug == true){Serial.println("0rndshow");}
+    if (Debug == true){Serial.println("0RNDshow");}
     leds.show();
   }else{
-    if (Debug == true){Serial.println("0rndfaildivby3");}
+    if (Debug == true){Serial.println("0RNDfaildivby3");}
   }
 }
 
@@ -169,7 +169,6 @@ int nbrPixelbyCoordinate(int X,int Y){
   }else{
     position += X;
   }
-
   return position;
 }
 short on = 0;
@@ -185,12 +184,14 @@ void rndswitch(){
 
 void drawFrameFromBuffer(short frameType,int bufferLength){
   rndswitch();
-  if (Debug == true){Serial.println("type " + String(frameType));}
+  if (Debug == true){Serial.println("DFFBtype" + String(frameType));}
   if (frameType == 0){
     renderTypeZero(bufferLength);
+  }else if(frameType == 2){
+    if (Debug == true){Serial.println("DFFB2notsupp");}
   }else if(frameType == 3){
     renderTypeThree(bufferLength);
   }else{
-    if (Debug == true){Serial.println("frtyNotFound");}
+    if (Debug == true){Serial.println("DFFBfrtyNotFound");}
   }
  }
