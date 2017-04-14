@@ -79,16 +79,16 @@ class Serial(Output):
 				x = self.ser.readline()
 				self.handleResponse(x)
 
-	def handleResponse(self,reponse):
+	def handleResponse(self,response):
 		if response == "0RNDfaildivby3":
 			print "[!][SERIALDEVICE][RAW] WARNING: Serialdevice skipped one frame, because of a transmission fault [divby3]"
 		elif response == "DFFBfrtyNotFound":
 			print"[!][SERIALDEVICE] WARNING: Serialdevice skipped one frame, because of a error while interpreting the INIT bytes"
 		elif response == "3RNDcounterNmatch":
 			print "[!][SERIALDEVICE][RFCA] WARNING: Serialdevice skipped one frame, because of a bufferlength deocding error"
-		elif reponse == "DFFB2notsupp":
+		elif response == "DFFB2notsupp":
 			print "[!][SERIALDEVICE][LINEAR] WARNING: Serialdevice skipped one frame, because the compression is not supported"
-		elif reponse == "DFFB3notsupp":
+		elif response == "DFFB3notsupp":
 			print "[!][SERIALDEVICE][RFCA] WARNING: Serialdevice skipped one frame, because the compression is not supported"
 
 class BinaryFile(Output):

@@ -1,4 +1,18 @@
 class DBSC:
+    """
+    Basic description of the Algorithm.
+    First, the Algorithm is based on the idea, that in smaller amounts of data statistically the the numer of 0-255 numbers is not equally distributed in certain areas.
+    This Algorith now finds theese areas and shifts the bytes in that way, that the area where statistically the most numbers are has the lowes numbers.
+    The size of the area then selected is 2^^x and x is determined by some simple calculations for the best Result
+    Now the Algorithm can calculates the best bitlength.
+    Then all bytes will be adjusted according to the bitlength.
+    In this system the larger bytes have the length of 9 instead of 8bit. But, because of the significant savings in the selected area theese can be compensated enougth, so that the savings still are sufficcient th be called "Compression Algorithm"
+
+    The Algorithm works best with semi compressed data, where ...
+
+
+    (C) Felix Friedberger
+    """
     global modi,shift
     modi = [2,4,8,16,32,64,128]
     shift = [1,2,3,4,5,6,7]

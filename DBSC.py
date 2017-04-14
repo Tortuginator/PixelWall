@@ -84,9 +84,6 @@ class DBSC:
                 minM = modi[i]
         return minV,minV/8,minI
 
-
-
-
     @staticmethod
     def length(bitlength,length,counter):
         bitlength +=1
