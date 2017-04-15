@@ -4,7 +4,7 @@ class RFCA():
         self.levelOfDetail(LOD);
         self.frame = None
         self.last = None
-        self.LOD = 0
+        self.LOD = 1
         self.counter = -1
 
     def getByteCode(self):
@@ -19,6 +19,9 @@ class RFCA():
             return
         self.LOD = LOD
 
+    def decode(self, data):
+        pass
+        
     def addFrame(self, newFrame):
         difference = [[], [], []]
         if self.initNewFrame(newFrame) is True:

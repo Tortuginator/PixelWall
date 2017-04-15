@@ -1,4 +1,4 @@
-import serial, sys
+import serial, sys, time, datetime,socket,json
 sys.path.append('.\PixelWall')
 from PixelWall import Core, Exceptions, Compression, Frame,DBSC
 from threading import Thread
@@ -19,8 +19,10 @@ class Serial(Output):
 		self.ser = None
 		self.initbyte = 200
 		self.compression = compression
-		self.showrecv = False
+		self.showrecv = True
 		self.loopback = loopback
+		self.storage = None
+		self.instance = None
 		if self.compression == "RFCA":
 			self.CompressionInstance = RFCA.RFCA(LOD = 0);
 		self.__fireUp();
@@ -32,6 +34,8 @@ class Serial(Output):
 			self.ser = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
 		#self.ser.open()
 		print "[+]Serial Port Initialized @",self.port,"with baudrate",self.baudrate
+		self.instance = Thread(target = Serial.__asyncOutput, args = (self, ))
+		self.instance.start()
 		pass
 
 	def __prepareData(self, data):
@@ -62,22 +66,46 @@ class Serial(Output):
 			x = 0
 		elif self.compression == "RFCA":
 			x = 3
-		init = [self.initbyte, len(data)//255, len(data)%255, x]
-		tmp = list(bytearray(init) + data)
-		t = DBSC.DBSC(tmp).CalculateShiftMode()
-		print "[+] Length Comparison:",t[1], "VS",len(tmp)," Savings:",len(tmp)-t[1]
+		endseq = [233,244,245]
+		init = [self.initbyte, (len(data)+3)//255, (len(data)+3)%255, x]
+		tmp = list(bytearray(init) + data + bytearray(endseq))
+		#t = DBSC.DBSC(tmp).CalculateShiftMode()
+		#print "[+] Length Comparison:",t[1], "VS",len(tmp)," Savings:",len(tmp)-t[1]
 		return tmp
 
 	def output(self, data):
-		tmp = self.__correctFormat(self.__prepareData(data))
-		print "[+] Serial Transmission length", len(tmp), "bytes"
-		if self.loopback is False:
-			self.ser.write(tmp)
-			x = self.ser.readline()
-			while x != "":
-				if self.showrecv:print x;
-				x = self.ser.readline()
-				self.handleResponse(x)
+		if self.storage !=None:
+			print "[!] Skipping Frame"
+		self.storage = data;
+
+	def __asyncOutput(self):
+		framecount = 0
+		frametime = datetime.datetime.now() + datetime.timedelta(seconds = 1)
+		lockSend = False
+		print "[+][Serial] Serial async started"
+		while True:
+			line = ""
+			if not self.loopback:line = self.ser.readline()
+			if line != "":
+				self.handleResponse(line)
+				if "RNDcomplete" in line:
+					lockSend = False
+				if "RCVmissing" in line:
+					self.ser.write(tmp)
+					print "[!][Serial] Autorecover"
+				if self.showrecv is True:
+					pass#print line
+
+			if self.storage != None and lockSend is False:
+				tmp = self.__correctFormat(self.__prepareData(self.storage))
+				if self.loopback is False:self.ser.write(tmp)
+				if frametime < datetime.datetime.now():
+					print "[+][Serial] effective FPS:",framecount
+					framecount = 0
+					frametime = datetime.datetime.now() + datetime.timedelta(seconds = 1)
+				framecount +=1
+				self.storage = None
+				if not self.loopback:lockSend = True
 
 	def handleResponse(self,response):
 		if response == "0RNDfaildivby3":
@@ -125,7 +153,8 @@ class TCPClient(Output):
 
 	def __connect(self, force = False):
 		if (self.failcounter >= self.failmax) and not force:
-			raise Exceptions.failedToReconnect;
+			print "Failed to reconnect"
+			exit()
 		try:
 			print "[+][PixelWall/Output/TCPClient][__connect] Connecting", repr(self.ip), "@", repr(self.port)
 
@@ -135,6 +164,8 @@ class TCPClient(Output):
 
 		except Exception, e :
 			self.failcounter += 1
+			print e
+			raise e
 			self.__connect()
 			print "[!][PixelWall/Output/TCPClient][__connect] Socket excption, trying to reconnect:", repr(e)
 
@@ -149,10 +180,10 @@ class TCPClient(Output):
 		if not isinstance(data, Frame.Frame):
 			print "[!][PixelWall/Output/TCPClient][__prepareData] wrong type. Excepting:", repr(Frame.Frame)
 			return False
-		return Compression.toTransportfromLinear(Compression.toLinearfromRaw(data.getColorArr()))
+		return data.getColorArr()
 
 	def output(self, data):
-		data = self.__prepareData(data);
+		data = list(self.__prepareData(data));
 		if data is None:
 			print "[!][PixelWall/Output/TCPClient][output] Something went wrong."
 			return False
@@ -163,7 +194,7 @@ class TCPClient(Output):
 		if socket == None:
 			raise socketNotInitialized;
 		try:
-			self.socket.send(data)
+			self.socket.send(json.dumps(data))
 		except socket.timeout:
 			print "[!][PixelWall/Output/TCPClient][output] Socket timeout", repr(self.ip), "@", repr(self.port)
 			self.reconnect();
