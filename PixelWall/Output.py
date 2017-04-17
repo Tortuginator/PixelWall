@@ -79,6 +79,7 @@ class Serial(Output):
 
 	def __asyncOutput(self):
 		framecount = 0
+		framesize = 0
 		frametime = datetime.datetime.now() + datetime.timedelta(seconds = 1)
 		lockSend = False
 		print "[+][Serial] Serial async started"
@@ -100,8 +101,11 @@ class Serial(Output):
 				if self.loopback is False:self.ser.write(tmp)
 				if frametime < datetime.datetime.now():
 					print "[+][Serial] effective FPS:",framecount
+					print "[+][Serial] effective size:",framesize/framecount
 					framecount = 0
+					framesize = 0
 					frametime = datetime.datetime.now() + datetime.timedelta(seconds = 1)
+				framesize += len(tmp)
 				framecount +=1
 				self.storage = None
 				if not self.loopback:lockSend = True

@@ -81,6 +81,7 @@ void loop(){
           if (Debug == true){Serial.println("RVCvryFy -- " + String(int(buffer[bufferPosition-3])) + " " + String(int(buffer[bufferPosition-2])) + " " + String(int(buffer[bufferPosition-1])));}
         }
 				currentFlag = 0;
+        Serial.println("RNDcomplete");
 			}
     }
 	}
@@ -97,9 +98,9 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
   int index,locmax,counter;
   unsigned int r,g,b,number;
   short pixelpos;
-  
+
   bufferLength = bufferLength-3;
-  
+
   counter = 6;
   if (bufferLength != (lengthRGB[0] + lengthRGB[1] + lengthRGB[2] + 6)){
     if (Debug == true){Serial.println("3RNDcounterNmatch");}
@@ -131,7 +132,6 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
     }
   }
   leds.show();
-  Serial.println("RNDcomplete");
 }
 void renderTypeZero(int bufferLength) {
   int allpixels = Vlength*Hlength;
@@ -150,7 +150,6 @@ void renderTypeZero(int bufferLength) {
       }
     }
     leds.show();
-    Serial.println("RNDcomplete");
   }else{
     if (Debug == true){Serial.println("0RNDfaildivby3");}
   }
