@@ -1,16 +1,19 @@
-import socket, sys, time, datetime, serial
+import socket, sys, time, datetime, serial,json
 from threading import Thread
 import Core, Compression, Frame
 
 class Input():
-    def __init__(self):
-    	self.distinct = None
+	def __init__(self):
+		self.distinct = None
 
-    def callData(self,dFrame):
-    	raise NotImplementedError;
+	def callData(self,dFrame):
+		raise NotImplementedError;
 
-    def updateSinceLastCall(self):
-    	raise NotImplementedError;
+	def updateSinceLastCall(self):
+		raise NotImplementedError;
+
+	def fireUp(self):
+		pass
 
 class PyGame(Input):
 	def __init__(self, pyGameobj):
@@ -23,31 +26,35 @@ class PyGame(Input):
 		raise NotImplementedError
 
 class Function(Input):
-    def __init__(self, function):
-        self.function = function
-        self.args = None
+	def __init__(self, function):
+		self.function = function
+		self.args = None
 
-    def callData(self,dFrame):
-        if not isinstance(dFrame, Frame.Frame):
-            print "[!][PixelWall\Input\Function][callData] please return a", repr(Frame.Frame), "from the function."
-            return False
+	def callData(self,dFrame):
+		if not isinstance(dFrame, Frame.Frame):
+			print "[!][PixelWall\Input\Function][callData] please return a", repr(Frame.Frame), "from the function."
+			return False
 
-    def updateSinceLastCall(self):
-        return True;
+	def updateSinceLastCall(self):
+		return True;
 		#Allways true, because it should be called each time when it gets called from the engine
 
 class TCPServer(Input):
-    def __init__(self, ip = '', port = 4000):
-        self.ip = ip
-        self.port = port
-        self.instance = None
-        self.socket = None
-        self.buffer = 1024*500
-        self.distinct = None
-        self.failcounter = 0
-        self.maxfails = 3
-        self.__fireUp();
-        self.args = None
+	def __init__(self, ip = '', port = 4000):
+		super(int)
+		self.ip = ip
+		self.port = port
+		self.instance = None
+		self.socket = None
+		self.buffer = 1024*50
+		self.distinct = None
+		self.failcounter = 0
+		self.maxfails = 3
+		self.fireUp()
+		self.args = None
+
+	def updateSinceLastCall(self):
+		return self.distinct
 
 	def setBuffer(self, buffer):
 		if buffer != int(buffer) or not buffer > 0:
@@ -56,7 +63,7 @@ class TCPServer(Input):
 		self.buffer = buffer
 		return True
 
-	def __fireUp(self):
+	def fireUp(self):
 		self.failcounter += 1
 		print "[+][PixelWall\Input\TCPServer][__fireUp] Starting..."
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -65,7 +72,6 @@ class TCPServer(Input):
 		self.instance.start()
 		print "[+][PixelWall\Input\TCPServer][__fireUp] Started"
 
-	@staticmethod
 	def __srvThread(self):
 		self.socket.listen(1)
 		while True:
@@ -84,12 +90,13 @@ class TCPServer(Input):
 				print "[+][PixelWall\Input\TCPServer][__srvThread] (FORCED) Client disconnected " + repr(client_address)
 
 	def __verify(self, data):
-		return Compression.toRawfromLinear(Compression.toLinearfromTransport(data))
+		return json.loads(data)
 
-    def __updateIncoming(self, data):
-        isOK = self.__verify(data);
-        self.data = isOK
-        self.distinct = True
+	def __updateIncoming(self, data):
+		isOK = self.__verify(data);
+		self.data = isOK
+		self.distinct = True
+		print "[+]Server Recieved update"
 
 	def callData(self, dFrame,force = False):
 		if not self.distinct is True and force is False:
@@ -99,13 +106,12 @@ class TCPServer(Input):
 		if not self.instance.isAlive():
 			if self.failcounter >= self.maxfails:
 				raise failedToReconnect; #LOOK FOR SOMETHING BETTER
-			self.__fireUp();
+			self.fireUp()
 
-        third = len(self.data)/3
-        for i in range(0, third):
-            Y = i // dFrame.width
-            X = i % dFrame.width
-            dFrame.pixel[X, Y] = (self.data[i], self.data[i+third], self.data[i+third*2])
+		third = len(self.data[0])
+		for i in range(0, third):
+			Y = i // dFrame.width
+			X = i % dFrame.width
+			dFrame.pixel[X, Y] = (self.data[0][i], self.data[1][i], self.data[2][i])
 
-	def updateSinceLastCall(self):
-		return self.distinct;
+

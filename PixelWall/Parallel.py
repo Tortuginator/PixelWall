@@ -31,7 +31,7 @@ class TimeTrigger():
 
 class TimeManager():
 	def __init__(self):
-		self.baseFrequency = 60
+		self.baseFrequency = 200
 		self.instance = None
 		self.triggers = []
 

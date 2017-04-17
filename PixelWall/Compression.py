@@ -77,9 +77,7 @@ def toRawfromLinear(data):
                 new[cnt].append(i[x])
     return new
 
-def toLinearfromTransport(data):
-    data = bytearray(data);
-    Ldat = len(data);
+def toLinearfromTransport(ldat):
     #Structure:
     #[Compression (0,1,2)][EXTRA+6]
     #[Lengtha1][lengtha2][Lengthb1][lengthb2][lengthc1][lengthc2]
@@ -87,14 +85,14 @@ def toLinearfromTransport(data):
     totalLengthR = int(ldat[0]) * 254 + int(ldat[1])
     totalLengthG = int(ldat[2]) * 254 + int(ldat[3])
     totalLengthB = int(ldat[4]) * 254 + int(ldat[5])
-    if Ldat != (totalLengthR + totalLengthG + totalLengthB+6):
+    if len(ldat) != (totalLengthR + totalLengthG + totalLengthB+6):
         Core.UtilPrint.compose("!", self.__class__, __name__, "failed to decode. The lengths do not match. The packet will be ignored.")
         return False
 
     newdata = [[], [], []]
-    newdata[0] = data[7:7+totalLengthR]
-    newdata[1] = data[totalLengthR+7+1:totalLengthG+7+totalLengthR]
-    newdata[2] = data[totalLengthG+7+totalLengthR+1:totalLengthG+7+totalLengthR+totalLengthB]
+    newdata[0] = ldat[7:7+totalLengthR]
+    newdata[1] = ldat[totalLengthR+7+1:totalLengthG+7+totalLengthR]
+    newdata[2] = ldat[totalLengthG+7+totalLengthR+1:totalLengthG+7+totalLengthR+totalLengthB]
     return newdata
 
 
