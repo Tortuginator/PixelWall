@@ -82,8 +82,10 @@ class RFCA():
         if self.initNewFrame(newFrame) is True:
             return
         self.last =  RFCA.computeSequences(self.frame,newFrame)
-        self.frame = newFrame
         self.counter +=1
+
+    def setLastFrame(self,newFrame):
+        self.frame = newFrame
 
     def initNewFrame(self, newFrame):
         if self.frame == None:

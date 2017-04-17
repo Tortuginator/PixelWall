@@ -12,6 +12,9 @@ class Output():
 	def output(self, data):
 		raise NotImplementedError;
 
+	def autoFPS(self):
+		return -100;
+
 class Serial(Output):
 	def __init__(self, port = "COM10", compression = "RFCA",loopback = False):
 		self.port = port
@@ -20,9 +23,12 @@ class Serial(Output):
 		self.initbyte = 200
 		self.compression = compression
 		self.showrecv = True
+		self.skips = 0
 		self.loopback = loopback
 		self.storage = None
 		self.instance = None
+		self.CompressionInstance = None
+		self.prepared = None
 		if self.compression == "RFCA":
 			self.CompressionInstance = RFCA.RFCA(LOD = 0);
 		self.__fireUp();
@@ -74,8 +80,10 @@ class Serial(Output):
 
 	def output(self, data):
 		if self.storage !=None:
+			self.skips +=1
 			print "[!] Skipping Frame"
-		self.storage = data;
+		self.prepared = self.__correctFormat(self.__prepareData(data))
+		self.storage = data.getColorArr()
 
 	def __asyncOutput(self):
 		framecount = 0
@@ -97,13 +105,15 @@ class Serial(Output):
 					pass#print line
 
 			if self.storage != None and lockSend is False:
-				tmp = self.__correctFormat(self.__prepareData(self.storage))
+				tmp = self.prepared
+				if self.CompressionInstance is not None:
+					self.CompressionInstance.setLastFrame(self.storage)
 				if self.loopback is False:self.ser.write(tmp)
 				if frametime < datetime.datetime.now():
-					print "[+][Serial] effective FPS:",framecount
-					print "[+][Serial] effective size:",framesize/framecount
+					print "[+][Serial] effective FPS:",framecount, "| avg. bypF",framesize/framecount,  "|skips",self.skips,"| total usage",(float(framesize)/(self.baudrate/8))*100,"%"
 					framecount = 0
 					framesize = 0
+					self.skips = 0
 					frametime = datetime.datetime.now() + datetime.timedelta(seconds = 1)
 				framesize += len(tmp)
 				framecount +=1
