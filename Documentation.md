@@ -95,8 +95,8 @@ Some example GIFs are in the GIF folder in the parent dictionary.
 ### Game of Live (GameOfLive.py)
 This Animation is a standart implementation of the famous Game of Live. It uses the "offical" rules.
 ```python
-exampleGIF = PixelWall.PresetAnimations.GIF.GIF(File = "GIF\Boxes.gif",Position = (-2,-2))
-Ani = PixelWall.Animations.Animation(rFunc = exampleGIF, startframe = 0, infinity = True, tourCount = 0)
+exampleGoF = PixelWall.PresetAnimations.GameOfLife.GameOfLife(position = (10,10),pattern = [[0,1,1],[1,1,0],[0,1,0]])
+Ani = PixelWall.Animations.Animation(rFunc = exampleGoF, startframe = 0, infinity = True, tourCount = 0)
 ```
 Parameters:
 
