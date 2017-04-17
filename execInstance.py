@@ -8,12 +8,14 @@ def testRND(dFrame):
 
 F = PixelWall.Input.Function(testRND)
 #O = PixelWall.Output.BinaryFile()
-O = PixelWall.Output.Serial(port = "COM6", compression = "LINEAR", loopback = False)
-R = PixelWall.Engine(width = 28, height = 28, XInput = F, XOutput = O, fps = 5)
+O = PixelWall.Output.Serial(port = "COM6", compression = "RAW", loopback = False)
+R = PixelWall.Engine(width = 28, height = 28, XInput = F, XOutput = O, fps = 25)
 #Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Circle2,startframe = 0,infinity = True,tourLength = 200)
-#Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Chill,startframe = 0,infinity = True)
-#Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Matrix,startframe = 0,infinity = True)
-testGIF = PixelWall.PresetAnimations.GIF.GIF(File = "GIF\Circle3.gif",Position = (0,0))
+#testChill = PixelWall.PresetAnimations.Chill.Chill()
+#Ani = PixelWall.Animations.Animation(rFunc = testChill,startframe = 0,infinity = True)
+#testMatrix = PixelWall.PresetAnimations.Matrix.Matrix(Length = 10,Color = (0,200,0))
+#Ani = PixelWall.Animations.Animation(rFunc = testMatrix,startframe = 0,infinity = True)
+testGIF = PixelWall.PresetAnimations.GIF.GIF(File = "GIF\Geomtery1.gif",Position = (-2,-2))
 Ani = PixelWall.Animations.Animation(rFunc = testGIF, startframe = 0, infinity = True, tourCount = 0)
 R.AnimationManagementSystem.addAimation(Ani);
 R.fireUp();

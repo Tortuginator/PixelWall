@@ -62,10 +62,10 @@ class Serial(Output):
 			x = 0
 		elif self.compression == "RFCA":
 			x = 3
-		init = [self.initbyte, len(data)//255, len(data)%255, x]
-		tmp = list(bytearray(init) + data)
-		t = DBSC.DBSC(tmp).CalculateShiftMode()
-		print "[+] Length Comparison:",t[1], "VS",len(tmp)," Savings:",len(tmp)-t[1]
+		init = [self.initbyte, (len(data)+3)//255, (len(data)+3)%255, x]
+		tmp = list(bytearray(init) + data + bytearray([233,244,245]))
+		#t = DBSC.DBSC(tmp).CalculateShiftMode()
+		#print "[+] Length Comparison:",t[1], "VS",len(tmp)," Savings:",len(tmp)-t[1]
 		return tmp
 
 	def output(self, data):
