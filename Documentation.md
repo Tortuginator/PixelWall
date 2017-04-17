@@ -47,7 +47,82 @@ port | the Port of the server | 4000 | Yes
 connectOnInit | makes it possible to later connect to the server and not instantly | True | Yes
 
 there are interal options like `self.failmax or self.failcounter` which control the reconnect attempts
-### Build in Options
-### Custom options
-## Different Output options
+
+### Custom Output
+```python
+class Output():
+	def __init__(self):
+	def output(self, data):
+	def autoFPS(self):
+```
+in general you **NEED** support, when you create a new output option, following functions:
+*`__init__` to initialize your instance
+*`óutput` this is the function which recieves the data in a color channel array ( `[[],[],[]]`)
+
+so your code should look then like this:
+```python
+class MyOwnOutput(PixelWall.Output):
+  def __init__(some,option)
+    #my code
+    pass
+   
+   def output(self,data):
+    #do something with my data
+    pass
+```
+and then your output module should work fine
 ## Example Animations
+Currently there are 5 Different Example Animations / Functions / Generators
+
+### Matrix (Matrix.py)
+
+### GIF (GIF.py)
+As the title allready says. This Animation is capable of playing Gifs
+```python
+exampleGIF = PixelWall.PresetAnimations.GIF.GIF(File = "GIF\Boxes.gif",Position = (-2,-2))
+Ani = PixelWall.Animations.Animation(rFunc = exampleGIF, startframe = 0, infinity = True, tourCount = 0)
+```
+Parameters:
+
+parameter | value | default | Optional
+--- | --- | --- | ---
+path | the  path and filename to the Gif file | "" | No
+position | the top left position of the gif | (0,0) or (-2,-2) | Yes
+
+Be aware, that PIL does not corretly interpret GIFs with transparent as color.
+Some example GIFs are in the GIF folder in the parent dictionary.
+
+### Game of Live (GameOfLive.py)
+This Animation is a standart implementation of the famous Game of Live. It uses the "offical" rules.
+```python
+exampleGIF = PixelWall.PresetAnimations.GIF.GIF(File = "GIF\Boxes.gif",Position = (-2,-2))
+Ani = PixelWall.Animations.Animation(rFunc = exampleGIF, startframe = 0, infinity = True, tourCount = 0)
+```
+Parameters:
+
+parameter | value | default | Optional
+--- | --- | --- | ---
+position | the position for the patter. Top-left. | (0,0) | Yes
+pattern | the start pattern out of `1 and 0`. saved as array like [[0,1,1],[1,0],[1,1,1,1]]. One sub-list per row. | None | Yes
+rules | this uses the default ruleset. but it can be customized, by referencing a new function | `GameOfLive.Rules` | Yes
+color | the color of the living pixels | (255,255,255,255) | Yes
+
+There are some well known examples in the comment upper section of the file for the pattern parameter.
+In general a rules function should look like this (excerpt from the GameOfLive.py)
+
+```python
+def Rules(input,isalive):
+        count = GameOfLife.countlivingCells(input)
+        if count == 2 and isalive == 1:
+            return 1#LIVE
+        elif count == 3:
+            return 1#LIVE
+        return 0
+```
+
+### Chill (Chill.py)
+
+### Clock (Clock.py)
+
+### Circle2 (Circle2.py)
+
