@@ -1,11 +1,12 @@
 
-__all__ = ["Circle2","Matrix","Clock","Chill","GIF"]
+__all__ = ["Circle2","Matrix","Clock","Chill","GIF","GameOfLife","Spline"]
 
 class AnimationInstance():
     def __init__(self,**args):
         self.dFrame = None
         self.iteration = 0
         self.args = args
+        self.parent = None
         self.extendedInit()
 
     def setIteration(self,iteration):
@@ -17,3 +18,12 @@ class AnimationInstance():
 
     def extendedInit(self):
         pass
+
+    def setPrevframe(self):
+        pass
+
+    def dynamicDuration(self):
+        return False
+
+    def setParent(self,parent):
+        self.parent = parent

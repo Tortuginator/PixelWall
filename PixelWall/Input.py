@@ -34,6 +34,7 @@ class Function(Input):
 		if not isinstance(dFrame, Frame.Frame):
 			print "[!][PixelWall\Input\Function][callData] please return a", repr(Frame.Frame), "from the function."
 			return False
+		self.function(dFrame)
 
 	def updateSinceLastCall(self):
 		return True;
@@ -113,5 +114,3 @@ class TCPServer(Input):
 			Y = i // dFrame.width
 			X = i % dFrame.width
 			dFrame.pixel[X, Y] = (self.data[0][i], self.data[1][i], self.data[2][i])
-
-

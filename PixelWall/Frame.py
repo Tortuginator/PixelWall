@@ -9,7 +9,7 @@ class Frame():
 		self.width = width;
 		self.PixelCount = height*width
 		self.FunctionStorage = []
-		self.img = Image.new("RGBA", (self.height, self.width), (0, 0, 0, 0));
+		self.img = Image.new("RGBA", (self.height, self.width), (0, 0, 0, 255));
 		self.pixel = self.img.load()
 		self.imgdraw = ImageDraw.Draw(self.img)
 

@@ -16,9 +16,9 @@ class Output():
 		return -100;
 
 class Serial(Output):
-	def __init__(self, port = "COM10", compression = "RFCA",loopback = False):
+	def __init__(self, port = "COM10", compression = "RFCA",loopback = False,baudrate = 1000000):
 		self.port = port
-		self.baudrate = 1000000
+		self.baudrate = baudrate
 		self.ser = None
 		self.initbyte = 200
 		self.compression = compression
@@ -82,8 +82,7 @@ class Serial(Output):
 		if self.storage !=None:
 			self.skips +=1
 			print "[!] Skipping Frame"
-		self.prepared = self.__correctFormat(self.__prepareData(data))
-		self.storage = data.getColorArr()
+		self.storage = data
 
 	def __asyncOutput(self):
 		framecount = 0
@@ -105,9 +104,9 @@ class Serial(Output):
 					pass#print line
 
 			if self.storage != None and lockSend is False:
-				tmp = self.prepared
+				tmp = self.__correctFormat(self.__prepareData(self.storage))
 				if self.CompressionInstance is not None:
-					self.CompressionInstance.setLastFrame(self.storage)
+					self.CompressionInstance.setLastFrame(self.storage.getColorArr())
 				if self.loopback is False:self.ser.write(tmp)
 				if frametime < datetime.datetime.now():
 					print "[+][Serial] effective FPS:",framecount, "| avg. bypF",framesize/framecount,  "|skips",self.skips,"| total usage",(float(framesize)/(self.baudrate/8))*100,"%"
@@ -154,7 +153,7 @@ class BinaryFile(Output):
 			f.write(data)
 
 class TCPClient(Output):
-	def __init__(self, ip, port, connectOnInit = True):
+	def __init__(self, ip, port = 4000, connectOnInit = True):
 		self.ip = ip
 		self.port = port
 		self.failcounter = 0;

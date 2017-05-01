@@ -1,10 +1,7 @@
 import PixelWall
-import PIL
-def testRND(dFrame):
-	#dFrame.imgdraw.ellipse((0,0,10,10), fill="red", outline = "blue")
-	#dFrame.imgdraw.line([(0,0),(0,27)],fill = "red")
-	#dFrame.imgdraw.rectangle((0,20,28,28),fill = "blue")
-	return dFrame
+from PIL import Image,ImageFont
+font = ImageFont.truetype("Silkscreen.ttf",size = 8)
+def filteri(dFrame):
 
 F = PixelWall.Input.Function(testRND)
 #O = PixelWall.Output.BinaryFile()

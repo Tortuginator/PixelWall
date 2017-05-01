@@ -57,7 +57,7 @@ def SmoothRectangle(dFrame,position,color,height,width):
     assert type(color)== tuple,"color in the wrong format"
     assert len(color) == 3,"color has the length"
 
-    assert type(height) == int  and type(width) == int,"wring height/width format"
+    assert type(height) == int  and type(width) == int,"wrong height/width format"
 
     Xpos = int(position[0])
     Ypos = int(position[1])
