@@ -1,5 +1,5 @@
 
-__all__ = ["Circle2","Matrix","Clock","Chill","GIF","GameOfLife","Spline"]
+__all__ = ["Circle2","Matrix","Clock","Chill","GIF","GameOfLife","Spline","SnakeOnSpeed"]
 
 class AnimationInstance():
     def __init__(self,**args):

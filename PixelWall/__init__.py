@@ -42,12 +42,8 @@ class Engine():
             dFrame = Frame(self.frameHeight, self.frameWidth)
             dFrame.framenumber = self.framenumber
             self.framenumber +=1
-            updatedFrame = self.Xinput.updateSinceLastCall()
-            if not updatedFrame:
-                return
-            if self.Xinput != None:
-                self.Xinput.callData(dFrame)
-            self.AnimationManagementSystem.Render(dFrame);
+            self.AnimationManagementSystem.Render(dFrame)
+            self.Xinput.callData(dFrame)
             self.Xoutput.output(dFrame)
             self.lastFrame = dFrame
         except Exception,e:

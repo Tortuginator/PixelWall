@@ -15,12 +15,11 @@ int drawingMemory[ledsPerStrip * 6];
 const int config = WS2811_GRB | WS2811_800kHz;
 OctoWS2811 leds(ledsPerStrip, displayMemory, drawingMemory, config);
 char buffer [Vlength*Hlength*3+20];
-
+char rfbuffer [Vlength*Hlength*3+20];
 unsigned int Color(byte r, byte g, byte b)
 {
   return (((unsigned int)r << 16) | ((unsigned int)g << 8) | (unsigned int)b);
 }
-
 //Code
 void setup() {
   Serial.begin(SerialBaudrate);
@@ -108,6 +107,7 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
   }
   locmax = counter;
   for (int p = 0; p < 3;p++){
+    int pSize = Vlength * Hlength;
     index = 0;
     locmax += lengthRGB[p];
     while (counter < locmax){
@@ -116,16 +116,8 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
         counter +=2;//the index in the buffer array
       }else{
         pixelpos = nbrPixelbyPosition(index);
-        //pixelpos = index;//for debugging
-        number = leds.getPixel(pixelpos);
-        r = number >> 16;
-        g = number >> 8 & 0xFF;
-        b = number & 0xFF;
-        if (p == 0){r = buffer[counter];}
-        if (p == 1){g = buffer[counter];}
-        if (p == 2){b = buffer[counter];}
-        //Serial.println("idx: " + String(index) + " p:" + String(p) + " cnt:" + String(counter) + " R:"  +String(int(r)) + " G:" + String(int(g)) + " B:" + String(int(b)));
-        leds.setPixel(pixelpos,Color(r,g,b));
+        rfbuffer[pSize*p+pixelpos] = buffer[counter];
+        leds.setPixel(pixelpos,Color(rfbuffer[pixelpos],rfbuffer[pSize*1+pixelpos],rfbuffer[pSize*2+pixelpos]));
         index +=1;
         counter +=1;
       }

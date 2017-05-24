@@ -6,12 +6,15 @@ class AnimationManager():
     def __init__(self, fps):
         self.Animations = []
         self.fps = fps
-
+        self.removeList = []
     def Render(self, dFrame):
-        for i in self.Animations:
+        for r in range(0,len(self.Animations)):
+            i = self.Animations[r]
             if i.disabled is True: continue;
+            if i.toRemove is True: self.removeList.append(r);continue;
             currIter = i.getIteration(dFrame.framenumber, self.fps)
-            if i.debug:print "[-] Current Iteration for ",rFunc, "@",currIter;
+            if currIter < 0:continue;
+            if i.debug:print "[-] Current Iteration for ",i.rFunc, "@",currIter;
             if i.last != currIter:
                 if i.last == None:
                     i.last = currIter
@@ -19,17 +22,20 @@ class AnimationManager():
                 i.prev = i.last
                 i.last = currIter
 
-            if i.smooth is True:
-                #Enhance
                 i.Render(currIter, dFrame)
-            else:
-                i.Render(currIter, dFrame)
+
+        for i in self.removeList:
+            del self.Animations[i]
+        del self.removeList[:]
 
     def addAimation(self,ani):
         self.Animations.append(ani)
 
+    def clear(self):
+        del self.Animations[:]
+
 class Animation(object):
-    def __init__(self, rFunc, startframe = 0, tourCount = 0, tourLength = 0, infinity = False, smooth = False,debug = False):
+    def __init__(self, rFunc, startframe = 0, tourCount = 0, tourLength = 0, infinity = False, smooth = False,debug = False,dynamicDuration = False):
         assert type(infinity) == bool,"The argument 'infinity' needs to be of type bool"
         assert type(smooth) == bool,"The argument 'smooth' needs to be of type bool"
         assert type(debug) == bool,"The argument 'debug' needs to be of type bool"
@@ -45,10 +51,17 @@ class Animation(object):
         self.last = None
         self.prev = None
         self.disabled = False
+        self.toRemove = False
         self.tourCount = tourCount
         self.rFunc = rFunc
-        if self.infinity is True and self.tourCount != 0:
+        self.dynamic = dynamicDuration
+        if self.infinity is True and self.tourCount != 0 and not dynamicDuration is True:
             print "You can't say, that the Animation should run indefinetely and at the same time should terminate after x tours"
+
+        if dynamicDuration is True:
+            self.tourCount = 0
+            self.infinity = True
+            self.tourLength = 1
 
     def setInstance(self,instance):
         self.rFunc = instance
@@ -76,5 +89,6 @@ class Animation(object):
 
     def Render(self,iteration,dFrame):
         self.rFunc.dFrame = dFrame
+        self.rFunc.setParent(self)
         self.rFunc.setIteration(iteration)
         self.rFunc.Render()
