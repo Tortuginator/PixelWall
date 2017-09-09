@@ -4,6 +4,7 @@ from PixelWall import Core, Exceptions, Compression, Frame,DBSC
 from threading import Thread
 import RFCA
 
+current_milli_time = lambda: int(round(time.time() * 1000))
 
 class Output():
 	def __init__(self):
@@ -63,7 +64,6 @@ class Serial(Output):
 			return bytearray([item for sublist in tmp for item in sublist])
 
 		print "[!] Compression not found"
-
 	def __correctFormat(self, data):
 		#The Firmware currently can only decode RFCA and RAW
 		if self.compression == "LINEAR":
