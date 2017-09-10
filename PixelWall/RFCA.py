@@ -1,10 +1,8 @@
 #RelativeFrameCompressionAlgorithm
 class RFCA():
-    def __init__(self, LOD = 0):
-        self.levelOfDetail(LOD);
+    def __init__(self):
         self.frame = None
         self.last = None
-        self.LOD = 1
         self.counter = -1
 
     def getByteCode(self):
@@ -12,15 +10,6 @@ class RFCA():
         initSeq = [len(self.last[0])//255, len(self.last[0])%255, len(self.last[1])//255, len(self.last[1])%255, len(self.last[2])//255, len(self.last[2])%255]
         #return initSeq + self.last[0] + self.last[1] + self.last[2]
         return bytearray(initSeq) + bytearray(self.last[0]) + bytearray(self.last[1]) + bytearray(self.last[2])
-
-    def levelOfDetail(self, LOD):
-        if LOD < 0 and LOD > 10:
-            self.LOD = 0
-            return
-        self.LOD = LOD
-
-    def decode(self, data):
-        pass
 
     @staticmethod
     def __FrameDiff(BaseFrame,SecondFrame):
@@ -83,6 +72,7 @@ class RFCA():
             return
         self.last =  RFCA.computeSequences(self.frame,newFrame)
         self.counter +=1
+        self.frame = newFrame
 
     def setLastFrame(self,newFrame):
         self.frame = newFrame

@@ -1,6 +1,5 @@
 import sys
 sys.path.append('.\PixelWall')
-from PixelWall import Core, Exceptions
 from PIL import Image, ImageDraw
 class Frame():
 	def __init__(self, height, width):

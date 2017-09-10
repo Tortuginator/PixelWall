@@ -1,6 +1,6 @@
-import socket, sys, time, datetime, serial,json
+import socket, sys, time, datetime, serial, json
 from threading import Thread
-import Core, Compression, Frame
+import Frame
 
 class Input():
 	def __init__(self):

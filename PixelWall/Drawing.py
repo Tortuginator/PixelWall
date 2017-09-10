@@ -1,6 +1,6 @@
 import sys
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Frame
+from PixelWall import Frame
 import math
 from PIL import Image, ImageDraw, ImageFilter
 

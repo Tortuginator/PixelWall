@@ -1,6 +1,6 @@
 import sys
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Exceptions,Frame
+from PixelWall import Frame
 
 class AnimationManager():
     def __init__(self, fps):

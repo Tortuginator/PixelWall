@@ -2,7 +2,7 @@ import sys
 import random
 import math
 sys.path.append('.\PixelWall')
-from PixelWall import Core,Frame,Drawing,PresetAnimations
+from PixelWall import Frame,Drawing,PresetAnimations
 from PIL import Image, ImageDraw, ImageFilter
 
 class Chill(PresetAnimations.AnimationInstance):

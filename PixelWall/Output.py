@@ -1,6 +1,6 @@
 import serial, sys, time, datetime,socket,json
 sys.path.append('.\PixelWall')
-from PixelWall import Core, Exceptions, Compression, Frame,DBSC
+from PixelWall import Frame, DBSC
 from threading import Thread
 import RFCA
 
@@ -19,118 +19,115 @@ class Output():
 class Serial(Output):
 	def __init__(self, port = "COM10", compression = "RFCA",loopback = False,baudrate = 1000000):
 		self.port = port
-		self.baudrate = baudrate
-		self.ser = None
-		self.initbyte = 200
 		self.compression = compression
-		self.showrecv = True
-		self.skips = 0
 		self.loopback = loopback
-		self.storage = None
+		self.baudrate = baudrate
 		self.instance = None
-		self.CompressionInstance = None
-		self.prepared = None
-		if self.compression == "RFCA":
-			self.CompressionInstance = RFCA.RFCA(LOD = 0);
-		self.__fireUp();
-		if loopback is True:
-			print "[!]WARNING: Loopback on the Serialoutput is Enabled"
+		self.backlog = 0
+		self.tmpContent = None
+		self.stattime = current_milli_time() +1000
+		self.statcount = 0
+		self.statlen = 0
+		self.statre = 0
+		self.Reader = None
+		self.__fireUp()
+		self.sendq = None
+		self.Writer = None
 
 	def __fireUp(self):
 		if self.loopback is False:
-			self.ser = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
-		#self.ser.open()
+			self.interface = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
 		print "[+]Serial Port Initialized @",self.port,"with baudrate",self.baudrate
-		self.instance = Thread(target = Serial.__asyncOutput, args = (self, ))
-		self.instance.start()
-		pass
+		if self.Reader==None:
+			self.Reader = Thread(target = Serial.__asyncRead, args = (self, ))
+			self.Reader.start()
 
-	def __prepareData(self, data):
-		#data needs to be in raw format
-		if not isinstance(data, Frame.Frame):
-			raise unexpectedType(variable = "data", type="Frame.Frame")
-		if self.compression == "RFCA":
-			tmp = data.getColorArr()
-			self.CompressionInstance.addFrame(tmp);
-			return bytearray(self.CompressionInstance.getByteCode())
+	def output(self,content):
+		while(self.backlog != 0 and self.loopback is False):
+			time.sleep(0.003)
+		if self.Writer == None:
+			self.Writer = Thread(target = Serial.__asyncSend, args = (self,))
+			self.Writer.start()
+		self.sendq = content
 
-		elif self.compression == "RAW":
-			tmp = data.getColorArr()
-			return bytearray([item for sublist in tmp for item in sublist]);
+	def __asyncSend(self):
+		while True:
+			try:
+				if self.sendq != None:
+					if self.stattime <= current_milli_time():
+						if self.statcount !=0 and self.baudrate != 0:
+							print "[+][Serial] effective FPS: " + str(self.statcount)+ "| avg. bypF " + str(self.statlen/self.statcount)+ " | Re "+str(self.statre)+" | total usage "+str(int((float(self.statlen)/(self.baudrate/8))*100))+"%"
+							self.stattime = current_milli_time()+1000
+							self.statcount = 0
+							self.statlen = 0
+							self.statre = 0
+					if self.sendq != None:
+						self.backlog = 1
+						self.statlen+=len(self.sendq)
+						self.statcount+=1
+						self.tmpContent = self.sendq
+						if not self.loopback:self.interface.write(self.sendq)
+						self.sendq = None
+			except Exception,e:
+				print e
 
-		elif self.compression == "LINEAR":
-			tmp = data.getColorArr()
-			tmp = Compression.toLinearfromRaw(tmp)
-			return bytearray([item for sublist in tmp for item in sublist])
-
-		print "[!] Compression not found"
-	def __correctFormat(self, data):
-		#The Firmware currently can only decode RFCA and RAW
-		if self.compression == "LINEAR":
-			x = 2
-		elif self.compression == "RAW":
-			x = 0
-		elif self.compression == "RFCA":
-			x = 3
-		init = [self.initbyte, (len(data)+3)//255, (len(data)+3)%255, x]
-		tmp = list(bytearray(init) + data + bytearray([233,244,245]))
-		#t = DBSC.DBSC(tmp).CalculateShiftMode()
-		#print "[+] Length Comparison:",t[1], "VS",len(tmp)," Savings:",len(tmp)-t[1]
-		return tmp
-
-	def output(self, data):
-		if self.storage !=None:
-			self.skips +=1
-			print "[!] Skipping Frame"
-		self.storage = data
-
-	def __asyncOutput(self):
-		framecount = 0
-		framesize = 0
-		frametime = datetime.datetime.now() + datetime.timedelta(seconds = 1)
-		lockSend = False
-		print "[+][Serial] Serial async started"
+	def __asyncRead(self):
 		while True:
 			line = ""
-			if not self.loopback:line = self.ser.readline()
+			if not self.loopback:line = self.interface.readline()
 			if line != "":
-				self.handleResponse(line)
+				print line
 				if "RNDcomplete" in line:
-					lockSend = False
+					self.backlog = 0
 				if "RCVmissing" in line:
-					self.ser.write(tmp)
-					print "[!][Serial] Autorecover"
-				if self.showrecv is True:
-					pass#print line
+					#print line
+					self.statre +=1
+					self.interface.write(self.tmpContent)
 
-			if self.storage != None and lockSend is False:
-				tmp = self.__correctFormat(self.__prepareData(self.storage))
-				if self.CompressionInstance is not None:
-					self.CompressionInstance.setLastFrame(self.storage.getColorArr())
-				if self.loopback is False:self.ser.write(tmp)
-				if frametime < datetime.datetime.now():
-					print "[+][Serial] effective FPS:",framecount, "| avg. bypF",framesize/framecount,  "|skips",self.skips,"| total usage",(float(framesize)/(self.baudrate/8))*100,"%"
-					framecount = 0
-					framesize = 0
-					self.skips = 0
-					frametime = datetime.datetime.now() + datetime.timedelta(seconds = 1)
-				framesize += len(tmp)
-				framecount +=1
-				self.storage = None
-				if not self.loopback:lockSend = True
+	def sendImage(self,content,RFCA = True,RAW = False):
+		assert RFCA != RAW,"Only one option can be selected"
+		if RFCA:
+			self.output(Serial.buildpackage(Type = 100,ID = 102,Content = content))
+		elif RAW:
+			self.output(Serial.buildpackage(Type = 100,ID = 101,Content = content))
+		else:
+			print "error RAW RFCA match"
 
-	def handleResponse(self,response):
-		if response == "0RNDfaildivby3":
-			print "[!][SERIALDEVICE][RAW] WARNING: Serialdevice skipped one frame, because of a transmission fault [divby3]"
-		elif response == "DFFBfrtyNotFound":
-			print"[!][SERIALDEVICE] WARNING: Serialdevice skipped one frame, because of a error while interpreting the INIT bytes"
-		elif response == "3RNDcounterNmatch":
-			print "[!][SERIALDEVICE][RFCA] WARNING: Serialdevice skipped one frame, because of a bufferlength deocding error"
-		elif response == "DFFB2notsupp":
-			print "[!][SERIALDEVICE][LINEAR] WARNING: Serialdevice skipped one frame, because the compression is not supported"
-		elif response == "DFFB3notsupp":
-			print "[!][SERIALDEVICE][RFCA] WARNING: Serialdevice skipped one frame, because the compression is not supported"
+	@staticmethod
+	def buildpackage(Type,ID,Content):
+		if Content == None:
+			return None
+		init = [200, len(Content)//255, len(Content)%255,Type,ID]
 
+		if Content is None:
+			return init
+		else:
+			return init + list(Content)
+#Protocoll
+
+#SENDER CONSTRUCT EXPRESSION
+
+#New Packet Sequence
+####	200
+
+#Abort Packet Sequence
+####	001 - 001 - 002 - 002
+
+#Header Packet Sequence
+####	[LENGTH (1)] - [LENGTH (2)] - [TYPE/COMPRESSION] + [ID] + [CONTENT atLENGHT]
+
+#TYPE/COMPRESSION
+#000 - SETTINGS 
+#100 - IMAGE
+
+#IMAGE ID
+#101 - IMAGE / RAW
+#102 - IMAGE / RFCA
+
+#SETTING ID[Length]
+#000 - Packet Recieved [000]
+#001 - Packet Aborted [000]
+#002 - No Packet to Abort [000]
 class BinaryFile(Output):
 	def __init__(self, filename = "frame.bin", path = ""):
 		self.filename = filename

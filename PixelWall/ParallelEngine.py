@@ -1,6 +1,7 @@
 import socket, sys, time, datetime
 from threading import Thread
 import sys
+import RFCA
 sys.path.append('.\PixelWall')
 
 
@@ -49,6 +50,7 @@ class RoundRender():
 		self.storage = []
 		self.idx = 0
 		self.RenderInput = RenderInput
+		self.RFCA = RFCA.RFCA();
 
 		for i in range(0,self.max):
 			self.storage.append(None)
@@ -61,13 +63,23 @@ class RoundRender():
 		self.storage[index].hook = Thread(target = RenderUnit.Run, args = (self.storage[index],args ))
 		self.storage[index].hook.start()
 
+	def newCompress(self,index):
+		index = index % self.max
+		if self.storage[index].isComputing and not self.storage[index].RenderExecuted :
+			print "Waiting for Renderer"
+			while self.storage[index].isComputing == True :
+				time.sleep(0.002)
+		if self.storage[index].RenderExecuted:
+			self.storage[index].Chook = Thread(target = RenderUnit.Compress, args = (self.storage[index],self.RFCA ))
+			self.storage[index].Chook.start()
+
 	def get(self,args):
 		#print "[RenderRoulette] GET " + str(self.idx) + "|" + str(current_milli_time())
 		result = None
-		while self.storage[self.idx].isComnputing == True:
+		while self.storage[self.idx].isComputing == True:
 			time.sleep(0.001)
-		if self.storage[self.idx].isComplete == True:
-			result = self.storage[self.idx].result
+		if self.storage[self.idx].compressed == True:
+			result = self.storage[self.idx].compressedresult
 		elif self.storage[self.idx].isFaulty == True:
 			result = None
 		#print "Calc Time: " + str(self.storage[self.idx].time) +"ms"
@@ -75,20 +87,25 @@ class RoundRender():
 		self.newRun(self.idx,args)
 		#update index
 		self.idx = (self.idx +1)%self.max
+		self.newCompress(self.idx)
 		return result
 
 class RenderUnit():
 	def __init__(self,func):
 		self.isFaulty = False
 		self.isComplete = False
-		self.isComnputing = None
+		self.isComputing = None
 		self.func = func
 		self.hook = None
 		self.result = None
 		self.time = 0
+		self.compressed = False
+		self.compressedresult = None
+		self.RenderExecuted = False
+		self.Chook = None
 
 	def Run(self,args):
-		self.isComnputing = True
+		self.isComputing = True
 		self.time = current_milli_time()
 		try:
 			#print "[RenderRoulette] RND " + str(current_milli_time())
@@ -97,14 +114,25 @@ class RenderUnit():
 		except Exception,e:
 			print e
 			self.isFaulty = True
-		self.isComnputing = False
+		self.isComputing = False
 		self.time = current_milli_time()-self.time
+		self.RenderExecuted = True
 
-# if __name__ == "__main__":
-# 	def recv(i):
-# 		print "RCV"
-# 	def rnd():
-# 		pass
-# 	a = Manager(rnd,recv);
-# 	a.Renderfps = 30
-# 	a.Launch()
+	def Compress(self,instance):
+		if self.isComputing == False:
+			if self.isFaulty == True:
+				self.compressed = None
+				return
+			if self.result == None:
+				return
+		try:
+			self.isComputing = True
+			#print "[RenderRoulette] CMP " + str(current_milli_time())
+			instance.addFrame(self.result.getColorArr())
+			self.compressedresult = instance.getByteCode()
+			self.isComputing = False
+			self.compressed = True
+		except Exception,e:
+			print "[Compress]ERROR: " + str(e)
+			self.isFaulty = True
+
