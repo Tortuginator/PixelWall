@@ -1,6 +1,7 @@
 import sys
 import random
 import math
+import datetime
 sys.path.append('.\PixelWall')
 from PixelWall import Frame,Drawing,PresetAnimations
 from PIL import Image, ImageDraw, ImageFilter
@@ -39,7 +40,6 @@ class SnakeOnSpeed(PresetAnimations.AnimationInstance):
 				coordindates.append([startposX,startposY])
 			direction = [random.randint(0,3)]
 			self.LineStorage.append([colorID,0,direction,0,coordindates])
-
 		#iterate
 		for i in range(0,len(self.LineStorage)):
 			self.LineStorage[i][3] +=1 #counter
@@ -67,9 +67,8 @@ class SnakeOnSpeed(PresetAnimations.AnimationInstance):
 			index +=1;index = index % length
 			self.LineStorage[i][4][index] = [(self.LineStorage[i][4][indexold][0]+dirVector[0])%self.dFrame.img.size[0],(self.LineStorage[i][4][indexold][1]+dirVector[1])%self.dFrame.img.size[1]]
 			self.LineStorage[i][1] = index
-
 		#Render
 		for i in range(0,len(self.LineStorage)):
 			locColor = colors[self.LineStorage[i][0]]
 			for p in range(0,len(self.LineStorage[i][4])):
-				self.dFrame.imgdraw.point(self.LineStorage[i][4][p],fill =  locColor)
+				self.dFrame.pixel[self.LineStorage[i][4][p][0],self.LineStorage[i][4][p][1]] =  locColor
