@@ -76,7 +76,7 @@ class Serial(Output):
 			line = ""
 			if not self.loopback:line = self.interface.readline()
 			if line != "":
-				print line
+				#print line
 				if "RNDcomplete" in line:
 					self.backlog = 0
 				if "RCVmissing" in line:

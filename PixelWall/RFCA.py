@@ -4,18 +4,18 @@ class RFCA():
         self.frame = None
         self.last = None
         self.counter = -1
+        self.correctseqential = True # this enables the Algorithm to include a sequence in each frame increasing with each iteration to prevent faulty pixels
+        self.sequentiallength = 20
+        self.sequentialposition = 0
 
     def getByteCode(self):
-        #Type,SubframeType,Framenumber
         initSeq = [len(self.last[0])//255, len(self.last[0])%255, len(self.last[1])//255, len(self.last[1])%255, len(self.last[2])//255, len(self.last[2])%255]
-        #return initSeq + self.last[0] + self.last[1] + self.last[2]
         return bytearray(initSeq) + bytearray(self.last[0]) + bytearray(self.last[1]) + bytearray(self.last[2])
 
-    @staticmethod
-    def __FrameDiff(BaseFrame,SecondFrame):
-        return [RFCA.__ChannelDiff(BaseFrame[0],SecondFrame[0]),RFCA.__ChannelDiff(BaseFrame[1],SecondFrame[1]),RFCA.__ChannelDiff(BaseFrame[2],SecondFrame[2])]
-    @staticmethod
-    def __ChannelDiff(BaseChannel,SecondChannel):
+    def FrameDiff(self,BaseFrame,SecondFrame):
+        return [self.ChannelDiff(BaseFrame[0],SecondFrame[0]),self.ChannelDiff(BaseFrame[1],SecondFrame[1]),self.ChannelDiff(BaseFrame[2],SecondFrame[2])]
+
+    def ChannelDiff(self,BaseChannel,SecondChannel):
         #under the assumption, that booth Channels have the same configuration
         assert len(BaseChannel) == len(SecondChannel),"Booth Channels don't have the same length"
         difference = []
@@ -43,16 +43,19 @@ class RFCA():
             result.append(RFCA.__allowedSymbol(SecondFrame[channel][i]));
         return result
 
-    @staticmethod
-    def computeSequences(BaseFrame,SecondFrame):
+    def computeSequences(self,BaseFrame,SecondFrame):
         result = [[],[],[]]
-        difference = RFCA.__FrameDiff(BaseFrame,SecondFrame)
+        difference = self.FrameDiff(BaseFrame,SecondFrame)
 
         for c in range(0,len(SecondFrame)):
             Skip = 0
             for i in range(0,len(BaseFrame[c])):
-                if difference[c][i] == 0:
+                if i < self.sequentialposition*(self.sequentiallength+1) and i >= self.sequentialposition*self.sequentiallength and self.correctseqential:
+                    result[c].append(RFCA.__allowedSymbol(SecondFrame[c][i]))
+
+                elif difference[c][i] == 0:
                     Skip +=1
+
                 elif Skip == 0 and difference[c][i] != 0:
                     result[c].append(RFCA.__allowedSymbol(SecondFrame[c][i]))
 
@@ -65,12 +68,17 @@ class RFCA():
                     result[c] += RFCA.__skipSequence(counter = Skip)
                     Skip = 0
                     result[c].append(RFCA.__allowedSymbol(SecondFrame[c][i]))
+
+        if self.correctseqential:
+            self.sequentialposition +=1;
+            if self.sequentiallength*self.sequentialposition > len(BaseFrame[0]):
+                self.sequentialposition = 0
         return result
 
     def addFrame(self,newFrame):
         if self.initNewFrame(newFrame) is True:
             return
-        self.last =  RFCA.computeSequences(self.frame,newFrame)
+        self.last = self.computeSequences(self.frame,newFrame)
         self.counter +=1
         self.frame = newFrame
 

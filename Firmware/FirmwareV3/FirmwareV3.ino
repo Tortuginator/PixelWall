@@ -31,7 +31,7 @@ void setup() {
 //DecompressionConfiguration
 const byte incomingSequenceFlag = 200; // or char
 void loop(){
-  unsigned long timeback;
+  unsigned long timeback = 0;
   short inner = 0;
 	int bufferLength = 0;
 	int bufferPosition = 0;
@@ -40,28 +40,23 @@ void loop(){
 	short PacketType = 0;
   short PacketSubType = 0;
   short currentFlag = 0;
-
 	byte incomingByte;
 	while (true){
 		if (Serial.available() > 0) {
 			incomingByte = Serial.read();
 		}else{
-      if (currentFlag != 0 && millis()<(timeback+100)){
+      if (currentFlag > 0 && millis() >= timeback){
         Serial.println("RCVmissing");
-        Serial.println("twice");
+        timeback = 100 + millis();
         currentFlag = 0;
-        PacketType = 0;
-        PacketSubType = 0;
-        bufferPosition = 0;
-        bufferLength = 0;
-        timeback = millis();
+      }else{
+        continue;
       }
- 			break;
 		}
 		if (currentFlag == 0 and incomingSequenceFlag == incomingSequenceFlag){
-			if (Debug == true){Serial.println("RCVnew");}
 			currentFlag = 1;
-      timeback = millis();
+      if (Debug == true){Serial.println("RCVnew");}
+      timeback = millis()+100;
 		}else if (currentFlag == 1){
 			bufferLengthSTOR = incomingByte;
 			currentFlag = 2;
@@ -81,13 +76,11 @@ void loop(){
       Serial.println("RCVSubType");
       if (bufferLength == 0){
         currentFlag = 0;
-        drawFrameFromBuffer(PacketSubType,bufferLength);
       }
 		}else if (currentFlag == 5){
 			buffer[bufferPosition] = incomingByte;
       bufferPosition +=1;
 			if (bufferPosition == bufferLength){
-        //Serial.println("lastbt" + String(int(buffer[bufferLength-1-20])) + " u " + String(int(buffer[bufferLength-20-2])) + " u " + String(int(buffer[bufferPosition-20-3])));
 				drawFrameFromBuffer(PacketSubType,bufferLength);
 				currentFlag = 0;
         Serial.println("RNDcomplete");
@@ -108,11 +101,12 @@ void renderTypeThree(int bufferLength){//RFCA compression V1.0 -->THIS DOES NOT 
   unsigned int r,g,b,number;
   short pixelpos;
 
-  bufferLength = bufferLength-3;
 
-  counter = 3;
-  if (bufferLength != (lengthRGB[0] + lengthRGB[1] + lengthRGB[2] + 3)){
+  counter = 6;
+  if (bufferLength != (lengthRGB[0] + lengthRGB[1] + lengthRGB[2])+6){
     if (Debug == true){Serial.println("3RNDcounterNmatch");}
+    Serial.println(String(lengthRGB[0] + lengthRGB[1] + lengthRGB[2])+6);
+    Serial.println(String(bufferLength));
     return;
   }
   locmax = counter;
@@ -145,7 +139,6 @@ void renderTypeZero(int bufferLength) {
     if (Debug == true){Serial.println("0RNDinit");}
     for (int i = 0; i <= ((innerLength/3)-1); i++) {
       if (i <= allpixels) {
-        //Serial.println("idx: " + String(i) + " R: " + String(int(buffer[i])) + " G: " + String(int(buffer[i + (innerLength/3)])) + " B: " + String(int(buffer[i + ((innerLength/3)*2)])));
         color = Color(buffer[i],buffer[i + (innerLength/3)],buffer[i + ((innerLength/3)*2)]);
         pixelpos = nbrPixelbyPosition(i);
         leds.setPixel(pixelpos, color);
@@ -196,8 +189,7 @@ void rndswitch(){
     on = 1;
   }
 }
-
-void drawFrameFromBuffer(short frameType,int bufferLength){
+void drawFrameFromBuffer(short frameType, int bufferLength){
   rndswitch();
   if (Debug == true){Serial.println("DFFBtype" + String(frameType));}
   if (frameType == 101){

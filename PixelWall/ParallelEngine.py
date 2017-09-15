@@ -6,7 +6,7 @@ sys.path.append('.\PixelWall')
 
 
 current_milli_time = lambda: int(round(time.time() * 1000))
-
+global Continuity
 class Manager():
 	def __init__(self, RenderInput, SendOutput, fixargs = None):
 		self.RenderIn = RenderInput
@@ -16,8 +16,8 @@ class Manager():
 		self.Renderfps = 1
 		self.OutputThread = None
 		self.NextEmit = None
+		self.Continuity = 0
 		self.RenderRoulette = RoundRender(RenderInput,fixargs)
-
 	def Launch(self):
 		self.NextEmit = current_milli_time()
 		if self.OutputThread is None:
@@ -129,6 +129,7 @@ class RenderUnit():
 			self.isComputing = True
 			#print "[RenderRoulette] CMP " + str(current_milli_time())
 			instance.addFrame(self.result.getColorArr())
+			#print "[COMPRESSING] ID: " + str(self.result.framenumber);
 			self.compressedresult = instance.getByteCode()
 			self.isComputing = False
 			self.compressed = True
