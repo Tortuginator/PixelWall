@@ -32,4 +32,3 @@ class Engine():
         self.Xinput.callData(dFrame)
         self.lastFrame = dFrame
         return dFrame
-

@@ -76,7 +76,7 @@ class Serial(Output):
 			line = ""
 			if not self.loopback:line = self.interface.readline()
 			if line != "":
-				#print line
+				print line
 				if "RNDcomplete" in line:
 					self.backlog = 0
 				if "RCVmissing" in line:
@@ -87,22 +87,43 @@ class Serial(Output):
 	def sendImage(self,content,RFCA = True,RAW = False):
 		assert RFCA != RAW,"Only one option can be selected"
 		if RFCA:
-			self.output(Serial.buildpackage(Type = 100,ID = 102,Content = content))
+			self.output(Serial.buildpackage(ID = 1,Content = content))
 		elif RAW:
-			self.output(Serial.buildpackage(Type = 100,ID = 101,Content = content))
+			self.output(Serial.buildpackage(ID = 0,Content = content))
 		else:
 			print "error RAW RFCA match"
 
 	@staticmethod
-	def buildpackage(Type,ID,Content):
+	def buildpackage(ID,Content):
 		if Content == None:
 			return None
-		init = [200, len(Content)//255, len(Content)%255,Type,ID]
-
+		init = [200, len(Content)//255, len(Content)%255,len(Content)%71,ID,Serial._datachecksum(Content)]
+		print init
 		if Content is None:
 			return init
 		else:
 			return init + list(Content)
+	@staticmethod
+	def _datachecksum(data):
+		sum = 0;
+		for i in range(0,len(data)):
+			if (i % 5) == 0:
+				sum = sum + data[i]%7;
+			elif (i%7) == 0:
+				sum = sum + data[i]%5;
+			elif (i%11) == 0:
+				sum = sum + data[i]%1;
+			elif (i%13) == 0:
+				sum = sum + data[i]%13;
+			elif (i%17) == 0:
+				sum = sum + data[i]%17;
+			elif (i%19) == 0:
+				sum = sum + data[i]%19;
+			elif (i%3) == 0:
+				sum = sum + data[i]%3;
+			else:
+				sum = sum + data[i];
+  		return (sum/255)
 #Protocoll
 
 #SENDER CONSTRUCT EXPRESSION
@@ -117,7 +138,7 @@ class Serial(Output):
 ####	[LENGTH (1)] - [LENGTH (2)] - [TYPE/COMPRESSION] + [ID] + [CONTENT atLENGHT]
 
 #TYPE/COMPRESSION
-#000 - SETTINGS 
+#000 - SETTINGS
 #100 - IMAGE
 
 #IMAGE ID

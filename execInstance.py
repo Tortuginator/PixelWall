@@ -8,7 +8,7 @@ def filteri(dFrame):
 
 F = PixelWall.Input.Function(filteri)
 #O = PixelWall.Output.BinaryFile()
-O = PixelWall.Output.Serial(port = "COM4", compression = "RFCA", loopback = False)
+O = PixelWall.Output.Serial(port = "COM6", compression = "RFCA", loopback = False)
 R = PixelWall.Engine(width = 28, height = 28, XInput = F, XOutput = O, fps = 55)
 #Ani = PixelWall.Animations.Animation(rFunc = PixelWall.AnimationFunctions.Circle2,startframe = 0,infinity = True,tourLength = 0)
 #testChill = PixelWall.PresetAnimations.Chill.Chill(ColorLower=(20,0,200),ColorHigher = (100,50,255))
