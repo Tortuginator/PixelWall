@@ -17,7 +17,7 @@ class Matrix(PresetAnimations.AnimationInstance):
             -Length sets the length of the stripes
         """
         length = 10
-        Color = (0, 200, 0)
+        Color = (0, 255, 0)
 
         if "Length" in self.args:
             assert int(self.args["Length"]) > 0,"Length must be greater than 0"
@@ -37,7 +37,7 @@ class Matrix(PresetAnimations.AnimationInstance):
                 tmpl = 0
             while tmpl < self.matrix[i]:
                 tc = float(1/float(length))*(self.matrix[i]-tmpl)
-                self.dFrame.imgdraw.point((i, tmpl),(Color[0], int(Color[1]*(1-tc)), Color[2]))
+                self.dFrame.imgdraw.point((i, tmpl),(int(Color[0]*(1-tc)), int(Color[1]*(1-tc)), int(Color[2]*(1-tc))))
                 tmpl +=1
             self.matrix[i] +=1;
             if self.matrix[i] > (self.dFrame.img.size[1]+length+random.randint(0, 5)): #height

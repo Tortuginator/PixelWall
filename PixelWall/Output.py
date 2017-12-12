@@ -72,12 +72,13 @@ class Serial(Output):
 				print e
 
 	def __asyncRead(self):
+		line = ""
 		while True:
-			line = ""
-			if not self.loopback:line = self.interface.readline()
+			if not self.loopback:
+				line = self.interface.readline()	
 			if line != "":
-				print line
-				if "RNDcomplete" in line:
+				#print line
+				if "OK" in line:
 					self.backlog = 0
 				if "RCVmissing" in line:
 					#print line
@@ -98,7 +99,6 @@ class Serial(Output):
 		if Content == None:
 			return None
 		init = [200, len(Content)//255, len(Content)%255,len(Content)%71,ID,Serial._datachecksum(Content)]
-		print init
 		if Content is None:
 			return init
 		else:
@@ -112,7 +112,7 @@ class Serial(Output):
 			elif (i%7) == 0:
 				sum = sum + data[i]%5;
 			elif (i%11) == 0:
-				sum = sum + data[i]%1;
+				sum = sum + data[i]%11;
 			elif (i%13) == 0:
 				sum = sum + data[i]%13;
 			elif (i%17) == 0:

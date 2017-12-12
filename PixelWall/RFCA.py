@@ -26,8 +26,7 @@ class RFCA():
     @staticmethod
     def __skipSequence(counter):
         result = []
-        if counter > 255:
-            for r in range(0, counter//255):result +=[1,255];
+        for r in range(0, counter//255):result +=[1,255];
         result.append(1)
         result.append(counter%255)
         return result
@@ -39,7 +38,7 @@ class RFCA():
         assert 0 <= channel < 3,"wrong channel parameter"
 
         result = []
-        for i in range(index - length,index):
+        for i in range(index - length,index+1):
             result.append(RFCA.__allowedSymbol(SecondFrame[channel][i]));
         return result
 
@@ -50,21 +49,18 @@ class RFCA():
         for c in range(0,len(SecondFrame)):
             Skip = 0
             for i in range(0,len(BaseFrame[c])):
-                if i < self.sequentialposition*(self.sequentiallength+1) and i >= self.sequentialposition*self.sequentiallength and self.correctseqential:
-                    result[c].append(RFCA.__allowedSymbol(SecondFrame[c][i]))
+                if i < (self.sequentialposition+1)*self.sequentiallength and i >= self.sequentialposition*self.sequentiallength and self.correctseqential:
+                    difference[c][i] = 100;#Fake difference
 
-                elif difference[c][i] == 0:
+                if difference[c][i] == 0:
                     Skip +=1
-
                 elif Skip == 0 and difference[c][i] != 0:
                     result[c].append(RFCA.__allowedSymbol(SecondFrame[c][i]))
-
-                elif Skip > 0 and Skip <= 2:
+                elif Skip > 0 and Skip <= 2 and difference[c][i] != 0:
                     result[c] += RFCA.__recoverShortSkips(BaseFrame = BaseFrame,SecondFrame = SecondFrame,length = Skip,channel = c, index = i)
                     Skip = 0
-                    result[c].append(RFCA.__allowedSymbol(SecondFrame[c][i]))
 
-                elif Skip > 2:
+                elif Skip > 2 and difference[c][i] != 0:
                     result[c] += RFCA.__skipSequence(counter = Skip)
                     Skip = 0
                     result[c].append(RFCA.__allowedSymbol(SecondFrame[c][i]))
@@ -87,11 +83,8 @@ class RFCA():
 
     def initNewFrame(self, newFrame):
         if self.frame == None:
-            self.frame = [[], [], []]
-            for channel in range(0, len(newFrame)):
-                for p in range(0, len(newFrame[channel])):
-                    self.frame[channel].append(self.__allowedSymbol(newFrame[channel][p]))
-            self.last = self.frame
+            self.frame = [[0]*len(newFrame[0]),[0]*len(newFrame[0]),[0]*len(newFrame[0])]
+            self.last = self.computeSequences(self.frame,newFrame)
             self.counter = 1
             self.frame = newFrame
             return True
