@@ -65,7 +65,7 @@ class Chill(PresetAnimations.AnimationInstance):
 				col.append(i)
 
 		for r in range(0, len(col)):
-			del self.ChillStorage[col[r]];
+			self.ChillStorage[col[r]]= [random.randint(0, self.dFrame.img.size[0]), random.randint(0, self.dFrame.img.size[1]), (random.randint(ColorLower[0], ColorHigher[0]), random.randint(ColorLower[1], ColorHigher[1]), random.randint(ColorLower[2], ColorHigher[2])), random.randint(SpeedMin, SpeedMax), 0]
 
 		self.dFrame.img = self.dFrame.img.filter(ImageFilter.GaussianBlur(radius = 5))#To prevent the "ignoring" of the borders by 2 px, when only using the SMOOTH_MORE filter
 		self.dFrame.img = self.dFrame.img.filter(ImageFilter.SMOOTH_MORE)

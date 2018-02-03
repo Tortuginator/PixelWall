@@ -1,6 +1,6 @@
 import serial, sys, time, datetime,socket,json
 sys.path.append('.\PixelWall')
-from PixelWall import Frame, DBSC
+from PixelWall import Frame
 from threading import Thread
 import RFCA
 
@@ -13,96 +13,55 @@ class Output():
 	def output(self, data):
 		raise NotImplementedError;
 
-	def autoFPS(self):
-		return -100;
-
-class Serial(Output):
+class SimpleSerial(Output):
 	def __init__(self, port = "COM10", compression = "RFCA",loopback = False,baudrate = 1000000):
 		self.port = port
 		self.compression = compression
 		self.loopback = loopback
 		self.baudrate = baudrate
 		self.instance = None
-		self.backlog = 0
 		self.tmpContent = None
-		self.stattime = current_milli_time() +1000
+		self.stattime = current_milli_time()+1000
 		self.statcount = 0
 		self.statlen = 0
 		self.statre = 0
-		self.Reader = None
 		self.__fireUp()
-		self.sendq = None
-		self.Writer = None
 
 	def __fireUp(self):
 		if self.loopback is False:
 			self.interface = serial.Serial(self.port, self.baudrate, timeout=0.005,bytesize = serial.EIGHTBITS)
 		print "[+]Serial Port Initialized @",self.port,"with baudrate",self.baudrate
-		if self.Reader==None:
-			self.Reader = Thread(target = Serial.__asyncRead, args = (self, ))
-			self.Reader.start()
 
 	def output(self,content):
-		while(self.backlog != 0 and self.loopback is False):
-			time.sleep(0.003)
-		if self.Writer == None:
-			self.Writer = Thread(target = Serial.__asyncSend, args = (self,))
-			self.Writer.start()
-		self.sendq = content
-
-	def __asyncSend(self):
-		while True:
-			try:
-				if self.sendq != None:
-					if self.stattime <= current_milli_time():
-						if self.statcount !=0 and self.baudrate != 0:
-							print "[+][Serial] effective FPS: " + str(self.statcount)+ "| avg. bypF " + str(self.statlen/self.statcount)+ " | Re "+str(self.statre)+" | total usage "+str(int((float(self.statlen)/(self.baudrate/8))*100))+"%"
-							self.stattime = current_milli_time()+1000
-							self.statcount = 0
-							self.statlen = 0
-							self.statre = 0
-					if self.sendq != None:
-						self.backlog = 1
-						self.statlen+=len(self.sendq)
-						self.statcount+=1
-						self.tmpContent = self.sendq
-						if not self.loopback:self.interface.write(self.sendq)
-						self.sendq = None
-			except Exception,e:
-				print e
-
-	def __asyncRead(self):
-		line = ""
-		while True:
-			if not self.loopback:
-				line = self.interface.readline()	
-			if line != "":
-				#print line
-				if "OK" in line:
-					self.backlog = 0
-				if "RCVmissing" in line:
-					#print line
-					self.statre +=1
-					self.interface.write(self.tmpContent)
-
+		if self.statcount !=0 and self.baudrate != 0 and self.stattime <= current_milli_time():
+			print "[+][Serial] effective FPS: " + str(self.statcount)+ "| avg. bypF " + str(self.statlen/self.statcount)+ " | total usage "+str(int((float(self.statlen)/(self.baudrate/8))*100))+"%"
+			self.stattime = current_milli_time()+1000
+			self.statcount = 0
+			self.statlen = 0
+		if content != None:
+			self.statlen+=len(content)
+			self.statcount+=1
+			if not self.loopback:self.interface.write(content)
+	
 	def sendImage(self,content,RFCA = True,RAW = False):
 		assert RFCA != RAW,"Only one option can be selected"
 		if RFCA:
-			self.output(Serial.buildpackage(ID = 1,Content = content))
+			self.output(SimpleSerial.buildpackage(ID = 1,Content = content))
 		elif RAW:
-			self.output(Serial.buildpackage(ID = 0,Content = content))
+			self.output(SimpleSerial.buildpackage(ID = 0,Content = content))
 		else:
-			print "error RAW RFCA match"
+			print "error RAW <-> RFCA match"
 
 	@staticmethod
 	def buildpackage(ID,Content):
 		if Content == None:
 			return None
-		init = [200, len(Content)//255, len(Content)%255,len(Content)%71,ID,Serial._datachecksum(Content)]
+		init = [200, len(Content)//255, len(Content)%255,len(Content)%71,ID,SimpleSerial._datachecksum(Content)]
 		if Content is None:
 			return init
 		else:
 			return init + list(Content)
+
 	@staticmethod
 	def _datachecksum(data):
 		sum = 0;
@@ -123,7 +82,7 @@ class Serial(Output):
 				sum = sum + data[i]%3;
 			else:
 				sum = sum + data[i];
-  		return (sum/255)
+  		return (sum%255)
 #Protocoll
 
 #SENDER CONSTRUCT EXPRESSION
@@ -149,6 +108,7 @@ class Serial(Output):
 #000 - Packet Recieved [000]
 #001 - Packet Aborted [000]
 #002 - No Packet to Abort [000]
+
 class BinaryFile(Output):
 	def __init__(self, filename = "frame.bin", path = ""):
 		self.filename = filename

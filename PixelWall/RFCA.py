@@ -9,8 +9,8 @@ class RFCA():
         self.sequentialposition = 0
 
     def getByteCode(self):
-        initSeq = [len(self.last[0])//255, len(self.last[0])%255, len(self.last[1])//255, len(self.last[1])%255, len(self.last[2])//255, len(self.last[2])%255]
-        return bytearray(initSeq) + bytearray(self.last[0]) + bytearray(self.last[1]) + bytearray(self.last[2])
+        initSeq = [len(self.last[1])//255, len(self.last[1])%255, len(self.last[2])//255, len(self.last[2])%255, len(self.last[0])//255, len(self.last[0])%255]
+        return bytearray(initSeq) + bytearray(self.last[1]) + bytearray(self.last[2]) + bytearray(self.last[0])
 
     def FrameDiff(self,BaseFrame,SecondFrame):
         return [self.ChannelDiff(BaseFrame[0],SecondFrame[0]),self.ChannelDiff(BaseFrame[1],SecondFrame[1]),self.ChannelDiff(BaseFrame[2],SecondFrame[2])]

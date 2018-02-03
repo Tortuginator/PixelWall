@@ -3,7 +3,7 @@
 
 ## General
 ### Frame data Structure
-The frame's datastructure is a simple 2-Dimensional list with three sublists. One for reach color. The Pixels are simply saved in this list, without any position information. The position will later be recovered, by using modulo width on the index of the sub-list
+The frames datastructure is a simple 2-dimensional list with three sublists. One for each color. The pixels are simply saved in this list, without any position information. The position will later be recovered, by using modulo width on the index of the sub-list
 Basically: `[Red[],Green[],Blue[]]`
 
 ## Different **input** options
