@@ -12,18 +12,18 @@ def filteri(dFrame):
 F = PixelWall.Input.Function(filteri)
 #O = PixelWall.Output.BinaryFile()
 O = PixelWall.Output.SimpleSerial(port = "COM6", compression = "RFCA", loopback = False)
-R = PixelWall.Engine(width = 28, height = 28, XInput = F, XOutput = O, fps = 60)
+R = PixelWall.Engine(width = 28, height = 28, XInput = F, XOutput = O, fps = 30)
 #testChill = PixelWall.PresetAnimations.Chill.Chill(ColorLower=(0,100,150),ColorHigher = (20,190,255))
 #Ani = PixelWall.Animations.Animation(rFunc = testChill,startframe = 0,infinity = True)
 
 #testMatrix = PixelWall.PresetAnimations.Matrix.Matrix(Length = 15,Color = (0,150,0))
 #Ani = PixelWall.Animations.Animation(rFunc = testMatrix,startframe = 0,infinity = True)
 
-testGIF = PixelWall.PresetAnimations.GIF.GIF(File = "GIF\Ball1.gif",Position = (-2,-2))
+testGIF = PixelWall.PresetAnimations.GIF.GIF(File = "GIF\Math.gif",Position = (-2,-2))
 Ani = PixelWall.Animations.Animation(rFunc = testGIF, startframe = 0, infinity = True, tourCount = 0)
 
-testPhysics = PixelWall.PresetAnimations.ForcesOfPhysics.ForcesOfPhysics()
-Ani = PixelWall.Animations.Animation(rFunc = testPhysics,startframe = 0,infinity = True,tourCount = 0)
+#testPhysics = PixelWall.PresetAnimations.ForcesOfPhysics.ForcesOfPhysics()
+#Ani = PixelWall.Animations.Animation(rFunc = testPhysics,startframe = 0,infinity = True,tourCount = 0)
 #testSnake = PixelWall.PresetAnimations.SnakeOnSpeed.SnakeOnSpeed()
 #Ani = PixelWall.Animations.Animation(rFunc = testSnake, startframe = 0, infinity = True, tourCount = 0)
 

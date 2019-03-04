@@ -12,16 +12,19 @@ class ForcesOfPhysics(PresetAnimations.AnimationInstance):
 		self.steps = 0
 
 	def Render(self):
-		if self.steps == 0:
-			myP1 = PH_Particle(position = (8,00),acceleration = (0,1),mass = 200000,color = (255,0,0))
-			myP2 = PH_Particle(position = (10,00),acceleration = (0,0.03),mass = 2000,color = (0,0,255))
-			self.model.addParticle(myP1)
-			self.model.addParticle(myP2)
-			self.model.addParticle(PH_Particle(position = (10,10),mass = 50000,color = (0,255,0),mergable = False,fixed = True))
-			self.model.addParticle(PH_Particle(position = (15,15),mass = 500000,color = (0,255,0),mergable = True,fixed = True))
-			self.model.addParticle(PH_Particle(position = (15,7),mass = 5000,color = (0,255,255),mergable = True,fixed = False))
-		else:
-			self.model.simulate()
+		if self.steps% 10 ==0:
+			self.model.addParticle(PH_Particle(position = (int(random.uniform(0, 27)),int(random.uniform(0, 27))),mass = int(random.uniform(20, 50))*1000,color =(5,5,5),mergable = True,fixed = False))
+			
+		#if self.steps == 0:
+		#	myP1 = PH_Particle(position = (5,10),acceleration = (0,0.1),mass = 200000,color = (255,0,0))
+		#	myP2 = PH_Particle(position = (10,10),acceleration = (0,0.1),mass = 200000,color = (0,0,255))
+		#	self.model.addParticle(myP1)
+		#	self.model.addParticle(myP2)
+			#self.model.addParticle(PH_Particle(position = (10,10),mass = 50000,color = (0,255,0),mergable = False,fixed = True))
+			#self.model.addParticle(PH_Particle(position = (15,15),mass = 500000,color = (0,255,0),mergable = True,fixed = True))
+			#self.model.addParticle(PH_Particle(position = (15,7),mass = 5000,color = (0,255,255),mergable = True,fixed = False))
+		#else:
+		self.model.simulate()
 		points = self.model.dotList()
 		self.steps +=1
 		for i in points:
@@ -104,7 +107,7 @@ class PH_environment():
 		pDel = []
 		for (x,y) in pMerge:
 			pDel.append(x)
-			y.color = ((x.color[0] + y.color[0])/2,(x.color[1] + y.color[1])/2,(x.color[2] + y.color[2])/2)
+			y.color = ((x.color[0] + y.color[0]),(x.color[1] + y.color[1]),(x.color[2] + y.color[2]))
 			y.acceleration = (y.acceleration*y.mass + x.acceleration*x.mass)/(x.mass+y.mass)
 			y.forces = ((y.forces*y.mass) + (x.forces*x.mass))/(x.mass+y.mass)
 			y.mass += x.mass
