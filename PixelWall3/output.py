@@ -6,11 +6,14 @@ class Output:
 		pass
 
 	def output(self, data):
-		raise NotImplementedError;
+		raise NotImplementedError
+
+	def send_image(self, data):
+		raise NotImplementedError
 
 
 class SimpleSerial(Output):
-	def __init__(self, port="COM10", encoding="RFCA", loopback=False, baudrate=1000000):
+	def __init__(self, port="COM10", encoding="RFCA", loopback=False, baudrate=100000):
 		self.port = port
 		self.loopback = loopback
 		self.baudrate = baudrate
@@ -22,14 +25,14 @@ class SimpleSerial(Output):
 	def _fire_up(self):
 		if self.loopback is False:
 			self.interface = serial.Serial(self.port, self.baudrate, timeout=0.005, bytesize=serial.EIGHTBITS)
-		print("[+]Serial Port Initialized @", self.port, "with baudrate", self.baudrate)
+		print("[+] Serial Port Initialized @", self.port, "with baudrate", self.baudrate)
 
 	def output(self, content):
 		if content is not None:
 			if not self.loopback:
 				self.interface.write(content)
 	
-	def send_image(self,content):
+	def send_image(self, content):
 		assert self.encoding in ["RFCA", "RAW"]
 		if self.encoding == "RFCA":
 			self.output(SimpleSerial.build_package(id=1, content=content))
@@ -49,7 +52,7 @@ class SimpleSerial(Output):
 	@staticmethod
 	def _datachecksum(data):
 		sum = 0
-		for i in range(0,len(data)):
+		for i in range(0, len(data)):
 			if (i % 5) == 0:
 				sum = sum + data[i] % 7
 			elif (i%7) == 0:

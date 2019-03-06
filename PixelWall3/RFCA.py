@@ -1,6 +1,7 @@
 # RelativeFrameCompressionAlgorithm
 import numpy as np
 
+
 class RFCA:
     def __init__(self):
         self.frame = None
@@ -48,7 +49,7 @@ class RFCA:
                     in_layer_pointer += jump_counter+1
                     jump_counter = 0
 
-                elif jump_counter > 3 and difference[layer][pixel] != 0
+                elif jump_counter > 3 and difference[layer][pixel] != 0:
                     for r in range(0, jump_counter//255):
                         result[layer][in_layer_pointer] = 1
                         result[layer][in_layer_pointer + 1] = 255
@@ -64,10 +65,11 @@ class RFCA:
 
     def push_frame(self, new_frame):
         if self.is_first_push(new_frame) is True:
-            return
+            return self.latest_encoding
         self.latest_encoding = self.compute_encoding(self.frame, new_frame)
         self.frame_counter += 1
         self.frame = new_frame
+        return self.latest_encoding
 
     def is_first_push(self, new_frame):
         if self.frame is None:
